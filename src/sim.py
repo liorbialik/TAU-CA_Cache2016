@@ -9,4 +9,5 @@ if __name__ == "__main__":
         print(e.message)
         sys.exit(1)
 
-    print(config.options)
+
+

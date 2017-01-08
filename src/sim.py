@@ -1,18 +1,26 @@
 import sys
 import config
-from Utils import ParsingUtils
+import Memory
+from Utils import ParsingUtils, MemoryUtils
 
 
-def runSimulation(L1BlockSize, L2BlockSize):
-    with open(config.getTraceFilePath()) as traceFile:
-        for line in traceFile:
-            if 'S' in line:
-                numberOfCommands, dstMemoryAddressStr, dataToStore = ParsingUtils.parseStoreLineIntoStoreVariables(line)  # TODO: do we need this?
-                # storeData(dstMemoryAddress, data)  # TODO: need to  think of the right way to execute
+def runSimulation():
+    mainMemory = Memory.MainMemory()
+    mainMemory.getMemoryDataFromFile(config.options.meminFilePath)
+    pass
+#     totalNumberOfCommands = 0
+#     with open(config.getTraceFilePath()) as traceFile:
+#         for line in traceFile:
+#             if 'S' in line:
+#                 numberOfCommands, dstMemoryAddressStr, dataToStore = ParsingUtils.parseStoreLineIntoStoreVariables(line)  # TODO: do we need this?
+#                 numberOfCycles = MemoryUtils.storeData(dstMemoryAddressStr, dataToStore)  # TODO: need to  think of the right way to execute
+# 
+#             if 'L' in line:
+#                 numberOfCommands, srcMemoryAddressStr = ParsingUtils.parseLoadLineIntoStoreVariables(line)
+#                 numberOfCycles = MemoryUtils.loadData(srcMemoryAddressStr)  # TODO: need to  think of the right way to execute
+#             
+#             totalNumberOfCommands += numberOfCommands + numberOfCycles
 
-            if 'L' in line:
-                numberOfCommands, srcMemoryAddressStr = ParsingUtils.parseLoadLineIntoStoreVariables(line)
-                # loadData(dstMemoryAddress)  # TODO: need to  think of the right way to execute
 
 if __name__ == "__main__":
     try:
@@ -20,4 +28,8 @@ if __name__ == "__main__":
     except AssertionError as e:
         print(e.message)
         sys.exit(1)
-    runSimulation(config.L1BlockSize[0], config.L2BlockSize[0])  # TODO: in the future this will run in a loop for each block size
+    
+    config.L1BlockSize = config.L1BlockSizes[0]
+    config.L2BlockSize = config.L2BlockSizes[0]
+    runSimulation()
+            

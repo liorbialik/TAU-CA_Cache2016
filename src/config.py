@@ -36,7 +36,7 @@ def getCmdLineOptions():
     parser.add_argument('b1',
                         type=assertValidBlockSize,
                         help='The cache block size in decimal for L1')
-    parser.add_argument('b2',
+    parser.add_arguent('b2',
                         type=assertValidBlockSize,
                         help='The cache block size in decimal for L2. only relevant if levels is 2')
     parser.add_argument('traceFilePath',

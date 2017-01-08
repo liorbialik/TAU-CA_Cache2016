@@ -2,15 +2,23 @@ import argparse
 import os
 
 
-L1BlockSize = [2, 4, 8, 16, 32, 64, 128]
-L2BlockSize = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+L1BlockSizes = [2, 4, 8, 16, 32, 64, 128]
+L2BlockSizes = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
 
 # Memory Magics
-mainMemorySize = 16392
-L1MemorySize = 4098
-L2MemorySize = 32784
+mainMemorySize = 16777216  # Bytes
+L1MemorySize = 4098  # Bytes
+L2MemorySize = 32784  # Bytes
 L1HitTimeCycles = 1
 L2HitTimeCycles = 4
+MemoryAccessTime = 100
+secondaryMemoryAccessTime = 1
+
+CPUL1DataBusSize = 32 # bits
+CPUL1AddressBusSize= 24 # bits
+L1L2BusSize = 256 # bits
+L1MemBusSize = 64 # bits - if not running with L2
+L2MemBusSize = 64 # bits - if running with L2
 
 options = None
 
@@ -35,10 +43,10 @@ def getCmdLineOptions():
                         type=assertFileExists,
                         default="trace.txt",
                         help='The path to the trace file')
-    # parser.add_argument('meminFilePath',
-    #                     type=assertFileExists,
-    #                     default="memin.txt",
-    #                     help='The path to the memin file which contains the main memory\'s status before a run')
+    parser.add_argument('meminFilePath',
+                        type=assertFileExists,
+                        default="memin.txt",
+                        help='The path to the memin file which contains the main memory\'s status before a run')
     # parser.add_argument('memoutFilePath',
     #                     default="memout.txt",
     #                     help='The path to the memout file which contains the main memory\'s status after a run')

@@ -42,11 +42,16 @@ class MainMemory(object):
                 else:
                     raise ValueError("memin file contains a bad line: " + hexData)
 
-    def readDataFromAddress(self, address):
-        NotImplementedError
+    def readDataFromAddress(self, addressInHex):
+        addressInInt = int(addressInHex, 16)
+        # TODO: need to add later time that took to get the memory to stats
+        return self.memory[addressInInt]
 
-    def writeDataFromAddress(self, address, data):
-        NotImplementedError
+    def writeDataToAddress(self, data, addressInHex):
+        addressInInt = int(addressInHex, 16)
+        # TODO: need to add later time that took to write into the memory to stats
+        self.memory[addressInInt] = data
+        return
 
     def saveMemoryToFile(self, dstPath):
         with open(dstPath, 'w') as memoutFile:

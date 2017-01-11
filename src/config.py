@@ -126,3 +126,15 @@ def getL2Way1CacheStatusOutputFilePath():
 
 def getStatsFileName():
     return statsFileName
+
+
+def getMainMemorySize():
+    return mainMemorySize
+
+
+def getL1MemorySize():
+    return L1MemorySize
+
+
+def getL2MemorySize():
+    return L2MemorySize

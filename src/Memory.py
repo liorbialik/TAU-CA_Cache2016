@@ -14,6 +14,7 @@ class MainMemory(object):
         """
         self.memory = []
         self.outputLogFileName = config.getMainMemoryStatusOutputFilePath()
+        self.initializeMemoryToZero()
 
     def initializeMemoryToZero(self):
         self.memory = ['00' for i in range(config.mainMemorySize)]
@@ -48,7 +49,10 @@ class MainMemory(object):
         NotImplementedError
 
     def saveMemoryToFile(self, dstPath):
-        NotImplementedError
+        with open(dstPath, 'w') as memoutFile:
+            for i in range(config.mainMemorySize):
+                memoutFile.write(self.memory[i] + "\n")
+            memoutFile.close()
 
 class Cache(object):
     def __init__(self, size, blockSize, cacheAssociativity, nextLevelMem):
@@ -57,6 +61,7 @@ class Cache(object):
         self.blockSize = blockSize
         self.associativity = cacheAssociativity
         self.nextLevel = nextLevelMem
+        self.numberOfBlocks = size / blockSize
         self.numberOfSets = self.size / self.associativity
         self.offsetSize = int(math.log(self.blockSize, 2))
         self.indexSize = int(math.log(self.numberOfSets, 2))
@@ -65,6 +70,10 @@ class Cache(object):
         self.readMisses = 0
         self.writeHits = 0
         self.writeMisses = 0
+        self.initializeMemoryToZero()
+
+    def initializeMemoryToZero(self):
+        NotImplementedError
 
     def readData(self, address):
         NotImplementedError
@@ -75,6 +84,23 @@ class Cache(object):
     def saveMemoryToFile(self, dstPath):
         NotImplementedError
 
+    def parseHexAddress(self, addressInHex):
+        addressInBinary = bin(int(addressInHex, 16))[2:].zfill(config.addressSize)
+        offset = addressInBinary[-self.offsetSize:]
+        index = addressInBinary[-(self.offsetSize + self.indexSize):-self.offsetSize]
+        if index == '':
+            index = '0'
+        tag = addressInBinary[:-(self.offsetSize + self.indexSize)]
+        return offset, index, tag
+
+    def saveMemoryToFile(self, dstPath):
+        NotImplementedError
+
+
 class MemoryBlock(object):
     # https://github.com/lucianohgo/CacheSimulator/blob/master/src/block.py
-    NotImplementedError
+
+    def __init__(self, blockSize, address):
+        self.size = blockSize
+        self.address = address
+        self.valid = False

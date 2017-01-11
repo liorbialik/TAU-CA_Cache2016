@@ -1,23 +1,43 @@
 import config
 import math
 
-class MainMemory(object):
+class AbstractMemory(object):
+    def __init__(self, size, nextLevelMem):
+        self.size = size
+        self.nextLevel = nextLevelMem
+
+    def initializeMemoryToZero(self):
+        NotImplementedError
+
+    def readData(self, addressInHex):
+        NotImplementedError
+
+    def writeData(self, data, addressInHex):
+        NotImplementedError
+
+    def saveMemoryToFile(self, dstPath):
+        NotImplementedError
+
+class MainMemory(AbstractMemory):
     '''
     this class will represent the main memmory
     '''
 
     memory = []
     
-    def __init__(self):
+    def __init__(self, size, nextLevelMem=None):
         """
         initializing the memmory to zeros
         """
+        super(MainMemory, self).__init__(size, nextLevelMem)
         self.memory = []
+        self.size = size
         self.outputLogFileName = config.getMainMemoryStatusOutputFilePath()
         self.initializeMemoryToZero()
+        self.nextLevel = nextLevelMem
 
     def initializeMemoryToZero(self):
-        self.memory = ['00' for i in range(config.mainMemorySize)]
+        self.memory = ['00' for i in range(self.size)]
 
     def getMemoryDataFromFile(self, meminFilePath):
         """
@@ -42,12 +62,12 @@ class MainMemory(object):
                 else:
                     raise ValueError("memin file contains a bad line: " + hexData)
 
-    def readDataFromAddress(self, addressInHex):
+    def readData(self, addressInHex):
         addressInInt = int(addressInHex, 16)
         # TODO: need to add later time that took to get the memory to stats
         return self.memory[addressInInt]
 
-    def writeDataToAddress(self, data, addressInHex):
+    def writeData(self, data, addressInHex):
         addressInInt = int(addressInHex, 16)
         # TODO: need to add later time that took to write into the memory to stats
         self.memory[addressInInt] = data
@@ -55,12 +75,13 @@ class MainMemory(object):
 
     def saveMemoryToFile(self, dstPath):
         with open(dstPath, 'w') as memoutFile:
-            for i in range(config.mainMemorySize):
+            for i in range(self.size):
                 memoutFile.write(self.memory[i] + "\n")
             memoutFile.close()
 
-class Cache(object):
+class Cache(AbstractMemory):
     def __init__(self, size, blockSize, cacheAssociativity, nextLevelMem):
+        super(Cache, self).__init__(size, nextLevelMem)
         self.data = {}
         self.size = size
         self.blockSize = blockSize
@@ -80,10 +101,10 @@ class Cache(object):
     def initializeMemoryToZero(self):
         NotImplementedError
 
-    def readData(self, address):
+    def readData(self, addressInHex):
         NotImplementedError
 
-    def writeData(self, address, data):
+    def writeData(self, data, addressInHex):
         NotImplementedError
 
     def saveMemoryToFile(self, dstPath):
@@ -101,7 +122,7 @@ class Cache(object):
     def saveMemoryToFile(self, dstPath):
         NotImplementedError
 
-
+# TODO: not sure we need that. maybe better to work with lines?
 class MemoryBlock(object):
     # https://github.com/lucianohgo/CacheSimulator/blob/master/src/block.py
 

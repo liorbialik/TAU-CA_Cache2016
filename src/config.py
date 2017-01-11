@@ -14,11 +14,11 @@ L2HitTimeCycles = 4
 MemoryAccessTime = 100
 secondaryMemoryAccessTime = 1
 
-CPUL1DataBusSize = 32 # bits
-CPUL1AddressBusSize= 24 # bits
-L1L2BusSize = 256 # bits
-L1MemBusSize = 64 # bits - if not running with L2
-L2MemBusSize = 64 # bits - if running with L2
+CPUL1DataBusSize = 32  # bits
+CPUL1AddressBusSize= 24  # bits
+L1L2BusSize = 256  # bits
+L1MemBusSize = 64  # bits - if not running with L2
+L2MemBusSize = 64  # bits - if running with L2
 
 options = None
 

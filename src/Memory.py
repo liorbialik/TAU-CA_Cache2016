@@ -1,20 +1,29 @@
 import config
-
-DEFAULT_MAIN_MEMORY_SIZE = 16777216
+import math
 
 class MainMemory(object):
     '''
-    ******description
-    :param
-    :return
+    this class will represent the main memmory
     '''
 
     memory = []
     
     def __init__(self):
-        self.memory = ['00' for x in range(DEFAULT_MAIN_MEMORY_SIZE)]
-    
+        """
+        initializing the memmory to zeros
+        """
+        self.memory = []
+        self.outputLogFileName = config.getMainMemoryStatusOutputFilePath()
+
+    def initializeMemoryToZero(self):
+        self.memory = ['00' for i in range(config.mainMemorySize)]
+
     def getMemoryDataFromFile(self, meminFilePath):
+        """
+        fetching the initial main memory status from the memin file
+        :param meminFilePath: the path to the memin.txt file
+        :return: none
+        """
         with open(meminFilePath, 'r') as memfile:
             i = 0
             for line in memfile.readlines():
@@ -41,26 +50,21 @@ class MainMemory(object):
     def saveMemoryToFile(self, dstPath):
         NotImplementedError
 
-class L1Cache(object):
-    def __init__(self):
-        self.size = NotImplementedError # get size
-        self.blockSize = NotImplementedError #get block size
-        self.nextLevel = None  # TODO: create function: getNextLevel and get the level from options
-
-    def readData(self, address):
-        NotImplementedError
-
-    def writeData(self, address, data):
-        NotImplementedError
-
-    def saveMemoryToFile(self, dstPath):
-        NotImplementedError
-
-class L2Cache(object):
-    def __init__(self):
-        self.size = NotImplementedError # get size
-        self.blockSize = NotImplementedError #get block size
-        self.nextLevel = None  # TODO: need to define that the next level is main memory
+class Cache(object):
+    def __init__(self, size, blockSize, cacheAssociativity, nextLevelMem):
+        self.data = {}
+        self.size = size
+        self.blockSize = blockSize
+        self.associativity = cacheAssociativity
+        self.nextLevel = nextLevelMem
+        self.numberOfSets = self.size / self.associativity
+        self.offsetSize = int(math.log(self.blockSize, 2))
+        self.indexSize = int(math.log(self.numberOfSets, 2))
+        self.tagSize = config.addressSize - self.indexSize - self.offsetSize
+        self.readHits = 0
+        self.readMisses = 0
+        self.writeHits = 0
+        self.writeMisses = 0
 
     def readData(self, address):
         NotImplementedError

@@ -13,12 +13,20 @@ L1HitTimeCycles = 1
 L2HitTimeCycles = 4
 MemoryAccessTime = 100
 secondaryMemoryAccessTime = 1
+wordSize = 32/4  # Bytes
+addressSize = 24/4  # Bytes
+CPUL1DataBusSize = 32/4  # Bytes
+CPUL1AddressBusSize = 24/4  # Bytes
+L1L2BusSize = 256/4  # Bytes
+L1MemBusSize = 64/4  # Bytes - if not running with L2
+L2MemBusSize = 64/4  # Bytes - if running with L2
 
-CPUL1DataBusSize = 32  # bits
-CPUL1AddressBusSize = 24  # bits
-L1L2BusSize = 256  # bits
-L1MemBusSize = 64  # bits - if not running with L2
-L2MemBusSize = 64  # bits - if running with L2
+# File names magics
+mainMemoryStatusFileName = "memout.txt"
+l1CacheStatusOutputFileName = "l1.txt"
+l2Way0CacheStatusOutputFileName = "l2way0.txt"
+l2Way1CacheStatusOutputFileName = "l2way1.txt"
+statsFileName = "stats.txt"
 
 options = None
 
@@ -47,21 +55,6 @@ def getCmdLineOptions():
                         type=assertFileExists,
                         default="memin.txt",
                         help='The path to the memin file which contains the main memory\'s status before a run')
-    parser.add_argument('memoutFilePath',
-                        default="memout.txt",
-                        help='The path to the memout file which contains the main memory\'s status after a run')
-    parser.add_argument('L1_memoutFilePath',
-                        default="l1.txt",
-                        help='The path to the file which contains the L1 cache memory\'s status after a run')
-    parser.add_argument('L2_Way0_memoutFilePath',
-                        default="l2way0.txt",
-                        help='The path to the file which contains the L2, way 0 cache memory\'s status after a run')
-    parser.add_argument('L2_Way1_memoutFilePath',
-                        default="l2way1.txt",
-                        help='The path to the file which contains the L2, way 1 cache memory\'s status after a run')
-    parser.add_argument('statsFilePath',
-                        default="stats.txt",
-                        help='The path to the stats file which contains the running stats after a run')
 
     cmdLineOptions = parser.parse_args()
 
@@ -82,6 +75,7 @@ def assertValidL1BlockSize(blockSize):
     assert blockSize.isdigit(), "Block size has to be an integer!"
     assert blockSize in validL1BlockSizes, "L1 Block size is not in allowed scope!"
     return int(blockSize)
+
 
 def assertValidL2BlockSize(blockSize):
     assert blockSize.isdigit(), "Block size has to be an integer!"
@@ -115,25 +109,20 @@ def getMemoryStatusInputFilePath():
 
 
 def getMainMemoryStatusOutputFilePath():
-    assertOptionsInit()
-    return options.memoutFilePath
+    return mainMemoryStatusFileName
 
 
 def getL1CacheStatusOutputFilePath():
-    assertOptionsInit()
-    return options.L1_memoutFilePath
+    return l1CacheStatusOutputFileName
 
 
 def getL2Way0CacheStatusOutputFilePath():
-    assertOptionsInit()
-    return options.L2_Way0_memoutFilePath
+    return l2Way0CacheStatusOutputFileName
 
 
 def getL2Way1CacheStatusOutputFilePath():
-    assertOptionsInit()
-    return options.L2_Way1_memoutFilePath
+    return l2Way1CacheStatusOutputFileName
 
 
-def getStatsFilePath():
-    assertOptionsInit()
-    return options.statsFilePath
+def getStatsFileName():
+    return statsFileName

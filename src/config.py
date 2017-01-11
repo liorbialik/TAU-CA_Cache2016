@@ -73,13 +73,13 @@ def assertFileExists(filePath):
 
 def assertValidL1BlockSize(blockSize):
     assert blockSize.isdigit(), "Block size has to be an integer!"
-    assert blockSize in validL1BlockSizes, "L1 Block size is not in allowed scope!"
+    assert int(blockSize) in validL1BlockSizes, "L1 Block size is not in allowed scope!"
     return int(blockSize)
 
 
 def assertValidL2BlockSize(blockSize):
     assert blockSize.isdigit(), "Block size has to be an integer!"
-    assert blockSize in validL2BlockSizes, "L2 Block size is not in allowed scope!"
+    assert int(blockSize) in validL2BlockSizes, "L2 Block size is not in allowed scope!"
     return int(blockSize)
 
 

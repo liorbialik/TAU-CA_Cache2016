@@ -2,8 +2,8 @@ import argparse
 import os
 
 
-validL1BlockSizes = [2, 4, 8, 16, 32, 64, 128]
-validL2BlockSizes = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+validL1BlockSizes = [4, 8, 16, 32, 64, 128]
+validL2BlockSizes = [4, 8, 16, 32, 64, 128, 256, 512, 1024]
 
 # Memory Magics
 mainMemorySize = 16777216  # Bytes

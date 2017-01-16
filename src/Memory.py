@@ -119,9 +119,6 @@ class Cache(AbstractMemory):
         tag = addressInBinary[:-(self.offsetSize + self.indexSize)]
         return offset, index, tag
 
-    def saveMemoryToFile(self, dstPath):
-        NotImplementedError
-
 # TODO: not sure we need that. maybe better to work with lines?
 class MemoryBlock(object):
     # https://github.com/lucianohgo/CacheSimulator/blob/master/src/block.py

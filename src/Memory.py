@@ -89,7 +89,7 @@ class MainMemory(AbstractMemory):
 
     def writeData(self, data, addressInHex):
         """
-        returns the relevant block of data
+        returns the relevant block of data, assuming len(data)==blockSize
         :param data: the desired data as array of strings
         :param addressInHex: the relevant address as string
         :return: None

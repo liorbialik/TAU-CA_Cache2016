@@ -129,11 +129,11 @@ class Cache(AbstractMemory):
 
     def initializeMemoryToZero(self):
         wayDict = {'dirty':False,
-                   'valid':False,
+                   'valid':True,
                    'tag':''.zfill(self.tagSize),
-                   'offset':''.zfill(self.offsetSize),
                    'data':['00' for i in range(self.blockSize)]}
         indexDict = {'way'+str(num):wayDict for num in range(self.associativity)}
+        indexDict['LRU'] = 'way0'
         self.data = [indexDict for i in range(self.numberOfSets)]
     
     def readData(self, addressInHex):

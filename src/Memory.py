@@ -111,16 +111,16 @@ class MainMemory(AbstractMemory):
 class Cache(AbstractMemory):
     def __init__(self, size, blockSize, cacheAssociativity, nextLevelMem):
         super(Cache, self).__init__(size, nextLevelMem)
-        self.data = {}
+        self.data = []
         self.size = size
         self.blockSize = blockSize
         self.associativity = cacheAssociativity
         self.nextLevel = nextLevelMem
-        self.numberOfBlocks = size / blockSize
-        self.numberOfSets = self.size / self.associativity
+        self.numberOfBlocks = self.size / self.blockSize
+        self.numberOfSets = self.numberOfBlocks / self.associativity
         self.offsetSize = int(math.log(self.blockSize, 2))
         self.indexSize = int(math.log(self.numberOfSets, 2))
-        self.tagSize = config.addressSize - self.indexSize - self.offsetSize
+        self.tagSize = 8*config.addressSize - self.indexSize - self.offsetSize
         self.readHits = 0
         self.readMisses = 0
         self.writeHits = 0
@@ -128,9 +128,17 @@ class Cache(AbstractMemory):
         self.initializeMemoryToZero()
 
     def initializeMemoryToZero(self):
-        NotImplementedError
+        wayDict = {'dirty':False,
+                   'tag':''.zfill(self.tagSize),
+                   'offset':''.zfill(self.offsetSize),
+                   'data':['00' for i in range(self.blockSize)]}
+        indexDict = {'way'+str(num):wayDict for num in range(self.associativity)}
+        self.data = [indexDict for i in range(self.numberOfSets)]
     
     def readData(self, addressInHex):
+        """
+        if self.associativity==1 the cache is L1 and there is no need to pass the data, only count the stats.
+        """
         NotImplementedError
 
     def writeData(self, data, addressInHex):
@@ -140,13 +148,13 @@ class Cache(AbstractMemory):
         NotImplementedError
 
     def parseHexAddress(self, addressInHex):
-        addressInBinary = bin(int(addressInHex, 16))[2:].zfill(config.addressSize)
+        addressInBinary = bin(int(addressInHex, 16))[2:].zfill(8*config.addressSize)
         offset = addressInBinary[-self.offsetSize:]
         index = addressInBinary[-(self.offsetSize + self.indexSize):-self.offsetSize]
         if index == '':
             index = '0'
         tag = addressInBinary[:-(self.offsetSize + self.indexSize)]
-        return offset, index, tag
+        return offset, int(index, 2), tag
 
 # TODO: not sure we need that. maybe better to work with lines?
 class MemoryBlock(object):

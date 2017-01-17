@@ -13,13 +13,12 @@ L1HitTimeCycles = 1
 L2HitTimeCycles = 4
 MemoryAccessTime = 100
 secondaryMemoryAccessTime = 1
-wordSize = 32/4  # Bytes
-addressSize = 24/4  # Bytes
-CPUL1DataBusSize = 32/4  # Bytes
-CPUL1AddressBusSize = 24/4  # Bytes
-L1L2BusSize = 256/4  # Bytes
-L1MemBusSize = 64/4  # Bytes - if not running with L2
-L2MemBusSize = 64/4  # Bytes - if running with L2
+wordSize = 32/8  # Bytes
+addressSize = 24/8  # Bytes
+CPUL1DataBusSize = 32/8  # Bytes
+CPUL1AddressBusSize = 24/8  # Bytes
+L1L2BusSize = 256/8  # Bytes
+cache2MemBusSize = 64/8  # Bytes - for both L1 and L2
 
 # File names magics
 mainMemoryStatusFileName = "memout.txt"

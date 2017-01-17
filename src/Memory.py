@@ -61,16 +61,45 @@ class MainMemory(AbstractMemory):
                     i += 1
                 else:
                     raise ValueError("memin file contains a bad line: " + hexData)
-
-    def readData(self, addressInHex):
+    
+    @staticmethod
+    def getActualAccessTime(BlockSize):
+        busSize = config.cache2MemBusSize
+        accessTime = config.MemoryAccessTime * int(math.ceil(1.0*BlockSize/busSize))
+        return accessTime
+    
+    @staticmethod
+    def getBlockLocations(addressInInt, blockSize):
+        addressBlockStartPos = addressInInt - (addressInInt%blockSize)
+        addressBlockEndPos = addressBlockStartPos + blockSize
+        return addressBlockStartPos, addressBlockEndPos
+    
+    def readData(self, addressInHex, blockSize):
+        """
+        returns the relevant block of data
+        :param addressInHex: the desired address as string
+        :param blockSize: the block size of the cache that asks to load the desired data
+        :return: the desired block of data
+        """
         addressInInt = int(addressInHex, 16)
-        # TODO: need to add later time that took to get the memory to stats
-        return self.memory[addressInInt]
+        addressBlockStartPos, addressBlockEndPos = self.getBlockLocations(addressInInt, blockSize)
+        accessTime = self.getActualAccessTime(blockSize)
+        # TODO: need to add later accessTime that took to get the memory to stats
+        return self.memory[addressBlockStartPos:addressBlockEndPos]
 
     def writeData(self, data, addressInHex):
+        """
+        returns the relevant block of data
+        :param data: the desired data as array of strings
+        :param addressInHex: the relevant address as string
+        :return: None
+        """
         addressInInt = int(addressInHex, 16)
-        # TODO: need to add later time that took to write into the memory to stats
-        self.memory[addressInInt] = data
+        blockSize = len(data)
+        addressBlockStartPos, addressBlockEndPos = self.getBlockLocations(addressInInt, blockSize)
+        self.memory[addressBlockStartPos:addressBlockEndPos] = data
+        accessTime = self.getActualAccessTime(blockSize)
+        # TODO: need to add later accessTime that took to write into the memory to stats
         return
 
     def saveMemoryToFile(self, dstPath):
@@ -100,7 +129,7 @@ class Cache(AbstractMemory):
 
     def initializeMemoryToZero(self):
         NotImplementedError
-
+    
     def readData(self, addressInHex):
         NotImplementedError
 

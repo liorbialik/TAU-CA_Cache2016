@@ -129,6 +129,7 @@ class Cache(AbstractMemory):
 
     def initializeMemoryToZero(self):
         wayDict = {'dirty':False,
+                   'valid':False,
                    'tag':''.zfill(self.tagSize),
                    'offset':''.zfill(self.offsetSize),
                    'data':['00' for i in range(self.blockSize)]}

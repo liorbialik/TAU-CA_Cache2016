@@ -182,7 +182,14 @@ class Cache(AbstractMemory):
         NotImplementedError
 
     def saveMemoryToFile(self, dstPath):
-        NotImplementedError
+        if 'way1' in dstPath:
+            way = 'way1'
+        else:
+            way = 'way0'
+        with open(dstPath, 'w') as memoutFile:
+            for line in self.data:
+                memoutFile.write(line[way]['data'] + "\n")
+            memoutFile.close()
 
     def parseHexAddress(self, addressInHex):
         addressInBinary = bin(int(addressInHex, 16))[2:].zfill(8*config.addressSize)

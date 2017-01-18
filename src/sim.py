@@ -3,12 +3,26 @@ import Memory
 import config
 
 
-def saveSimulationMemoryToFiles(mainMemory, l1Cache, l2Cache):
+def saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache):
     mainMemory.saveMemoryToFile(config.getMainMemoryStatusOutputFilePath())
     l1Cache.saveMemoryToFile(config.getL1CacheStatusOutputFilePath())
     if l2Cache:
         l2Cache.saveMemoryToFile(config.getL2Way0CacheStatusOutputFilePath())
         l2Cache.saveMemoryToFile(config.getL2Way1CacheStatusOutputFilePath())
+
+    with open(config.getStatsFileName(), 'w') as statsFile:
+        # program running cycles
+        statsFile.write(str(l1Cache.readHits) + "\n")
+        statsFile.write(str(l1Cache.writeHits) + "\n")
+        statsFile.write(str(l1Cache.readMisses) + "\n")
+        statsFile.write(str(l1Cache.writeMisses) + "\n")
+        statsFile.write(str(l2Cache.readHits) + "\n")
+        statsFile.write(str(l2Cache.writeHits) + "\n")
+        statsFile.write(str(l2Cache.readMisses) + "\n")
+        statsFile.write(str(l2Cache.writeMisses) + "\n")
+        # L1 local miss rate
+        # global miss rate
+        # AMAT
 
 def runSimulation():
 
@@ -39,9 +53,8 @@ def runSimulation():
     #
     #         # totalNumberOfCycles += numberOfCyclesBeforeCmd  # + numberOfCycles
 
-    saveSimulationMemoryToFiles(mainMemory, l1Cache, l2Cache)
+    saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache)
 
-    # print Stats
 
 if __name__ == "__main__":
     try:

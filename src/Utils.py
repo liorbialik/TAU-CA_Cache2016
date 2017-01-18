@@ -7,6 +7,7 @@ class ParsingUtils(object):
         numberOfCommands = splitLine[0]
         dstMemoryAddressStr = splitLine[2]
         dataToStore = splitLine[3].rstrip('\n')
+        dataToStore = [dataToStore[i:i + 2] for i in xrange(0, len(dataToStore), 2)]
         return numberOfCommands, dstMemoryAddressStr, dataToStore
 
     @staticmethod

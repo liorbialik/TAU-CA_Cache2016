@@ -8,7 +8,7 @@ validL2BlockSizes = [4, 8, 16, 32, 64, 128, 256, 512, 1024]
 # Memory Magics
 mainMemorySize = 16777216  # Bytes
 L1MemorySize = 4098  # Bytes
-L2MemorySize = 32784  # Bytes
+L2MemorySize = 32768  # Bytes
 L1HitTimeCycles = 1
 L2HitTimeCycles = 4
 MemoryAccessTime = 100

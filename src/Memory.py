@@ -131,7 +131,7 @@ class Cache(AbstractMemory):
 
     def initializeMemoryToZero(self):
         wayDict = {'dirty': False,
-                   'valid': True,
+                   'valid': False,
                    'tag': '-1',
                    'data': ['00' for i in range(self.blockSize)]}
         indexDict = {'way'+str(num): copy.deepcopy(wayDict) for num in range(self.associativity)}
@@ -149,38 +149,50 @@ class Cache(AbstractMemory):
             return 'way1'
         return 'way0'
 
-    def readData(self, addressInHex, blockSize):
-        offsetInInt, indexInInt, tagInBinary = self.parseHexAddress(addressInHex)
+    def lookForAddressInCache(self, indexInInt, tagInBinary):
+        hit = False
         _set = self.data[indexInInt]
         for way in [key for key in _set.keys() if 'way' in key]:
-            if _set[way]['tag'] == tagInBinary:
-                offsetBlockStartPos, offsetBlockEndPos = self.getBlockLocations(offsetInInt, blockSize)
-                _set['LRU'] = self.otherWay(way)
-                # TODO: implement accessTime and insert to stats
-                return _set[way]['data'][offsetBlockStartPos:offsetBlockEndPos]
-        print 'Error: Couldn\'t read hexAddress: "{add}" from L{num}cache!'.format(add=addressInHex, num=str(self.associativity))
-        sys.exit(1)
-
+            if _set[way]['tag'] == tagInBinary and _set[way]['valid']:
+                hit = True
+                return hit, way
+        return hit, _set['LRU']
+    
+    def calcAddressOfBlockInHex(self, indexInInt, tagInBinary):
+        addressInBinary = (tagInBinary + bin(indexInInt)[2:].zfill(self.indexSize)).ljust(8*config.addressSize, '0')
+        addressInHex = hex(int(addressInBinary, 2))[2:]
+        return addressInHex
+              
     def writeData(self, data, addressInHex):
         offsetInInt, indexInInt, tagInBinary = self.parseHexAddress(addressInHex)
-        _set = self.data[indexInInt]
-        for way in [key for key in _set.keys() if 'way' in key]:
-            if _set[way]['tag'] == tagInBinary or _set[way]['tag'] == '-1':
-                _set[way]['tag'] = tagInBinary
-                offsetBlockStartPos, offsetBlockEndPos = self.getBlockLocations(offsetInInt, len(data))
-                _set[way]['data'][offsetBlockStartPos:offsetBlockEndPos] = data
-                _set['LRU'] = self.otherWay(way)
-                # TODO: implement accessTime and isert to stats
-                return
-        print 'Error: Couldn\'t write to hexAddress: "{add}" in L{num}cache!'.format(add=addressInHex, num=str(self.associativity))
-        sys.exit(1)
+        hit, way = self.lookForAddressInCache(indexInInt, tagInBinary) # way will be the found way or what's in LRU if not found
+        if not hit:
+            blockIsDirty = self.data[indexInInt][way]['dirty']
+            if blockIsDirty:
+                blockAddressInHex = self.calcAddressOfBlockInHex(indexInInt, self.data[indexInInt][way]['tag'])
+                self.nextLevel.writeData(self.data[indexInInt][way]['data'], blockAddressInHex)
+            self.data[indexInInt][way]['data'] = self.nextLevel.readData(addressInHex, self.blockSize)
+        offsetBlockStartPos, offsetBlockEndPos = self.getBlockLocations(offsetInInt, len(data))
+        self.data[indexInInt][way]['data'][offsetBlockStartPos:offsetBlockEndPos] = data
+        self.data[indexInInt][way]['dirty'] = True
+        self.data[indexInInt][way]['valid'] = True
+        self.data[indexInInt][way]['tag'] = tagInBinary
+        if self.associativity == 2:
+            self.data[indexInInt]['LRU'] = self.otherWay(way)
 
-    def load(self):
-        NotImplementedError
-
-    def store(self):
-        NotImplementedError
-
+    def readData(self, addressInHex, blockSize):
+        offsetInInt, indexInInt, tagInBinary = self.parseHexAddress(addressInHex)
+        hit, way = self.lookForAddressInCache(indexInInt, tagInBinary) # way will be the found way or what's in LRU if not found
+        if not hit:
+            blockIsDirty = self.data[indexInInt][way]['dirty']
+            if blockIsDirty:
+                blockAddressInHex = self.calcAddressOfBlockInHex(indexInInt, self.data[indexInInt][way]['tag'])
+                self.nextLevel.writeData(self.data[indexInInt][way]['data'], blockAddressInHex)
+            self.data[indexInInt][way]['data'] = self.nextLevel.readData(addressInHex, self.blockSize)
+            self.data[indexInInt][way]['dirty'] = False
+        offsetBlockStartPos, offsetBlockEndPos = self.getBlockLocations(offsetInInt, blockSize)
+        return self.data[indexInInt][way]['data'][offsetBlockStartPos:offsetBlockEndPos]
+    
     def saveMemoryToFile(self, dstPath):
         if 'way1' in dstPath:
             way = 'way1'
@@ -188,7 +200,7 @@ class Cache(AbstractMemory):
             way = 'way0'
         with open(dstPath, 'w') as memoutFile:
             for line in self.data:
-                memoutFile.write(line[way]['data'] + "\n")
+                memoutFile.write('\n'.join(line[way]['data']) + "\n")
             memoutFile.close()
 
     def parseHexAddress(self, addressInHex):

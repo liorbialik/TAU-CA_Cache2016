@@ -1,6 +1,7 @@
 import sys
 import Memory
 import config
+from Utils import ParsingUtils
 
 
 def saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache):
@@ -41,20 +42,20 @@ def runSimulation():
     mainMemory.getMemoryDataFromFile(config.options.meminFilePath)
 
     #totalNumberOfCycles = 0
-    # with open(config.getTraceFilePath()) as traceFile:
-    #     for line in traceFile:
-    #         if 'S' in line:
-    #             numberOfCyclesBeforeCmd, dstMemoryAddressStr, dataToStore = ParsingUtils.parseStoreLineIntoStoreVariables(line)  # TODO: do we need this?
-    #             # numberOfCycles = MemoryUtils.storeData(dstMemoryAddressStr, dataToStore)  # TODO: need to  think of the right way to execute
-    #
-    #         if 'L' in line:
-    #             numberOfCyclesBeforeCmd, srcMemoryAddressStr = ParsingUtils.parseLoadLineIntoStoreVariables(line)
-    #             # numberOfCycles = MemoryUtils.loadData(srcMemoryAddressStr)  # TODO: need to  think of the right way to execute
-    #
+    with open(config.getTraceFilePath()) as traceFile:
+        for line in traceFile:
+            if 'S' in line:
+                numberOfCyclesBeforeCmd, dstMemoryAddressStr, dataToStore = ParsingUtils.parseStoreLineIntoStoreVariables(line)  # TODO: do we need this?
+                l1Cache.writeData(dataToStore, dstMemoryAddressStr)  # TODO: need to  think of the right way to execute
+    
+            if 'L' in line:
+                numberOfCyclesBeforeCmd, srcMemoryAddressStr = ParsingUtils.parseLoadLineIntoStoreVariables(line)
+                l1Cache.readData(srcMemoryAddressStr, 4)  # TODO: need to  think of the right way to execute
+    
     #         # totalNumberOfCycles += numberOfCyclesBeforeCmd  # + numberOfCycles
 
     saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache)
-
+    print 'DONE'
 
 if __name__ == "__main__":
     try:

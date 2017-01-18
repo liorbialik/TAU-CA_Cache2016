@@ -1,8 +1,14 @@
 import sys
-import config
 import Memory
-from Utils import ParsingUtils  # MemoryUtils
+import config
 
+
+def saveSimulationMemoryToFiles(mainMemory, l1Cache, l2Cache):
+    mainMemory.saveMemoryToFile(config.getMainMemoryStatusOutputFilePath())
+    l1Cache.saveMemoryToFile(config.getL1CacheStatusOutputFilePath())
+    if l2Cache:
+        l2Cache.saveMemoryToFile(config.getL2Way0CacheStatusOutputFilePath())
+        l2Cache.saveMemoryToFile(config.getL2Way1CacheStatusOutputFilePath())
 
 def runSimulation():
 
@@ -11,7 +17,8 @@ def runSimulation():
     if config.getLevelsOfCache() == 1:
         l1Cache = Memory.Cache(config.getL1MemorySize(), config.getBlockSizeForL1Cache(),
                                1, mainMemory)
-    if config.getLevelsOfCache() == 2:
+        l2Cache = None
+    else:
         l2Cache = Memory.Cache(config.getL2MemorySize(), config.getBlockSizeForL2Cache(),
                                2, mainMemory)
         l1Cache = Memory.Cache(config.getL1MemorySize(), config.getBlockSizeForL1Cache(),
@@ -32,12 +39,8 @@ def runSimulation():
     #
     #         # totalNumberOfCycles += numberOfCyclesBeforeCmd  # + numberOfCycles
 
-    # print main memory final status into 'memout' file
-    mainMemory.saveMemoryToFile(config.getMainMemoryStatusOutputFilePath())
-    # print l1 cache  memory final status into file
-    # l1Cache.saveMemoryToFile(config.getL1CacheStatusOutputFilePath())
-    # print l2 cache  memory final status into ***2*** files
-    # l2Cache.saveMemoryToFile(config.getL2CacheStatusOutputFilePath())
+    saveSimulationMemoryToFiles(mainMemory, l1Cache, l2Cache)
+
     # print Stats
 
 if __name__ == "__main__":

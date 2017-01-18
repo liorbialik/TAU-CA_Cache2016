@@ -11,7 +11,7 @@ class AbstractMemory(object):
     def initializeMemoryToZero(self):
         NotImplementedError
 
-    def readData(self, addressInHex):
+    def readData(self, addressInHex, blockSize):
         NotImplementedError
 
     def writeData(self, data, addressInHex):
@@ -130,12 +130,12 @@ class Cache(AbstractMemory):
         self.initializeMemoryToZero()
 
     def initializeMemoryToZero(self):
-        wayDict = {'dirty':False,
-                   'valid':True,
+        wayDict = {'dirty': False,
+                   'valid': True,
                    'tag': '-1',
-                   'data':['00' for i in range(self.blockSize)]}
-        indexDict = {'way'+str(num):copy.deepcopy(wayDict) for num in range(self.associativity)}
-        indexDict['LRU'] = 'way1'
+                   'data': ['00' for i in range(self.blockSize)]}
+        indexDict = {'way'+str(num): copy.deepcopy(wayDict) for num in range(self.associativity)}
+        indexDict['LRU'] = 'way0'
         self.data = [copy.deepcopy(indexDict) for i in range(self.numberOfSets)]
     
     @staticmethod
@@ -148,33 +148,39 @@ class Cache(AbstractMemory):
         if way == 'way0':
             return 'way1'
         return 'way0'
-    
+
     def readData(self, addressInHex, blockSize):
         offsetInInt, indexInInt, tagInBinary = self.parseHexAddress(addressInHex)
-        set = self.data[indexInInt]
-        for way in [key for key in set.keys() if 'way' in key]:
-            if set[way]['tag'] == tagInBinary:
+        _set = self.data[indexInInt]
+        for way in [key for key in _set.keys() if 'way' in key]:
+            if _set[way]['tag'] == tagInBinary:
                 offsetBlockStartPos, offsetBlockEndPos = self.getBlockLocations(offsetInInt, blockSize)
-                set['LRU'] = self.otherWay(way)
-                # TODO: implement accessTime and isert to stats
-                return set[way]['data'][offsetBlockStartPos:offsetBlockEndPos]
+                _set['LRU'] = self.otherWay(way)
+                # TODO: implement accessTime and insert to stats
+                return _set[way]['data'][offsetBlockStartPos:offsetBlockEndPos]
         print 'Error: Couldn\'t read hexAddress: "{add}" from L{num}cache!'.format(add=addressInHex, num=str(self.associativity))
         sys.exit(1)
 
     def writeData(self, data, addressInHex):
         offsetInInt, indexInInt, tagInBinary = self.parseHexAddress(addressInHex)
-        mySet = self.data[indexInInt]
-        for way in [key for key in mySet.keys() if 'way' in key]:
-            if mySet[way]['tag'] == tagInBinary or mySet[way]['tag'] == '-1':
-                mySet[way]['tag'] = tagInBinary
+        _set = self.data[indexInInt]
+        for way in [key for key in _set.keys() if 'way' in key]:
+            if _set[way]['tag'] == tagInBinary or _set[way]['tag'] == '-1':
+                _set[way]['tag'] = tagInBinary
                 offsetBlockStartPos, offsetBlockEndPos = self.getBlockLocations(offsetInInt, len(data))
-                mySet[way]['data'][offsetBlockStartPos:offsetBlockEndPos] = data
-                mySet['LRU'] = self.otherWay(way)
+                _set[way]['data'][offsetBlockStartPos:offsetBlockEndPos] = data
+                _set['LRU'] = self.otherWay(way)
                 # TODO: implement accessTime and isert to stats
                 return
         print 'Error: Couldn\'t write to hexAddress: "{add}" in L{num}cache!'.format(add=addressInHex, num=str(self.associativity))
         sys.exit(1)
-    
+
+    def load(self):
+        NotImplementedError
+
+    def store(self):
+        NotImplementedError
+
     def saveMemoryToFile(self, dstPath):
         NotImplementedError
 

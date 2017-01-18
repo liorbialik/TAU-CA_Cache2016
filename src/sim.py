@@ -11,7 +11,7 @@ def saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache):
         l2Cache.saveMemoryToFile(config.getL2Way1CacheStatusOutputFilePath())
 
     with open(config.getStatsFileName(), 'w') as statsFile:
-        # program running cycles
+        # TODO: program running cycles
         statsFile.write(str(l1Cache.readHits) + "\n")
         statsFile.write(str(l1Cache.writeHits) + "\n")
         statsFile.write(str(l1Cache.readMisses) + "\n")
@@ -20,9 +20,9 @@ def saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache):
         statsFile.write(str(l2Cache.writeHits) + "\n")
         statsFile.write(str(l2Cache.readMisses) + "\n")
         statsFile.write(str(l2Cache.writeMisses) + "\n")
-        # L1 local miss rate
-        # global miss rate
-        # AMAT
+        # TODO: L1 local miss rate
+        # TODO: global miss rate
+        # TODO: AMAT
 
 def runSimulation():
 

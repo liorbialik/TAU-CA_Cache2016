@@ -27,7 +27,7 @@ class MainMemory(AbstractMemory):
 
     memory = []
     
-    def __init__(self, size, nextLevelMem=None):
+    def __init__(self, size, nextLevelMem, busSizeToPrevLevel, accessTime):
         """
         initializing the memmory to zeros
         """
@@ -37,6 +37,10 @@ class MainMemory(AbstractMemory):
         self.outputLogFileName = config.getMainMemoryStatusOutputFilePath()
         self.initializeMemoryToZero()
         self.nextLevel = nextLevelMem
+        self.busSizeToPrevLevel = busSizeToPrevLevel
+        self.accessTime = accessTime
+        self.reads = 0
+        self.writes = 0
 
     def initializeMemoryToZero(self):
         self.memory = ['00' for i in range(self.size)]
@@ -64,14 +68,14 @@ class MainMemory(AbstractMemory):
                 else:
                     raise ValueError("memin file contains a bad line: " + hexData)
     
-    @staticmethod
-    def getActualAccessTime(BlockSize):
-        busSize = config.cache2MemBusSize
-        accessTime = config.MemoryAccessTime * int(math.ceil(1.0*BlockSize/busSize))
-        return accessTime
+    def getTotalActualAccessTime(self, BlockSize):
+        busSize = self.busSizeToPrevLevel
+        blockToBusSizeFactor = int(math.ceil(1.0*BlockSize/busSize))
+        singleAccessTime = self.accessTime + blockToBusSizeFactor-1
+        totalAccessTime = (self.reads + self.writes) * singleAccessTime
+        return totalAccessTime
     
-    @staticmethod
-    def getBlockLocations(addressInInt, blockSize):
+    def getBlockLocations(self, addressInInt, blockSize):
         addressBlockStartPos = addressInInt - (addressInInt%blockSize)
         addressBlockEndPos = addressBlockStartPos + blockSize
         return addressBlockStartPos, addressBlockEndPos
@@ -83,10 +87,9 @@ class MainMemory(AbstractMemory):
         :param blockSize: the block size of the cache that asks to load the desired data
         :return: the desired block of data
         """
+        self.reads += 1
         addressInInt = int(addressInHex, 16)
         addressBlockStartPos, addressBlockEndPos = self.getBlockLocations(addressInInt, blockSize)
-        accessTime = self.getActualAccessTime(blockSize)
-        # TODO: need to add later accessTime that took to get the memory to stats
         return self.memory[addressBlockStartPos:addressBlockEndPos]
 
     def writeData(self, data, addressInHex):
@@ -96,12 +99,11 @@ class MainMemory(AbstractMemory):
         :param addressInHex: the relevant address as string
         :return: None
         """
+        self.writes += 1
         addressInInt = int(addressInHex, 16)
         blockSize = len(data)
         addressBlockStartPos, addressBlockEndPos = self.getBlockLocations(addressInInt, blockSize)
         self.memory[addressBlockStartPos:addressBlockEndPos] = data
-        accessTime = self.getActualAccessTime(blockSize)
-        # TODO: need to add later accessTime that took to write into the memory to stats
         return
 
     def saveMemoryToFile(self, dstPath):
@@ -111,7 +113,7 @@ class MainMemory(AbstractMemory):
             memoutFile.close()
 
 class Cache(AbstractMemory):
-    def __init__(self, size, blockSize, cacheAssociativity, nextLevelMem):
+    def __init__(self, size, blockSize, cacheAssociativity, nextLevelMem, hitTimeCycles, busSizeToPrevLevel, accessTime):
         super(Cache, self).__init__(size, nextLevelMem)
         self.data = []
         self.size = size
@@ -127,6 +129,9 @@ class Cache(AbstractMemory):
         self.readMisses = 0
         self.writeHits = 0
         self.writeMisses = 0
+        self.hitTimeCycles = hitTimeCycles
+        self.busSizeToPrevLevel = busSizeToPrevLevel
+        self.accessTime = accessTime
         self.initializeMemoryToZero()
 
     def initializeMemoryToZero(self):
@@ -138,8 +143,15 @@ class Cache(AbstractMemory):
         indexDict['LRU'] = 'way0'
         self.data = [copy.deepcopy(indexDict) for i in range(self.numberOfSets)]
     
-    @staticmethod
-    def getBlockLocations(addressInInt, blockSize):
+    def getTotalActualAccessTime(self, BlockSize):
+        busSize = self.busSizeToPrevLevel
+        blockToBusSizeFactor = int(math.ceil(1.0*BlockSize/busSize))
+        singleAccessTime = self.accessTime * blockToBusSizeFactor
+        totalAccessTime = (self.readHits + self.writeHits
+                           + self.readMisses + self.writeMisses) * singleAccessTime
+        return totalAccessTime
+    
+    def getBlockLocations(self, addressInInt, blockSize):
         addressBlockStartPos = addressInInt - (addressInInt%blockSize)
         addressBlockEndPos = addressBlockStartPos + blockSize
         return addressBlockStartPos, addressBlockEndPos
@@ -166,7 +178,10 @@ class Cache(AbstractMemory):
     def writeData(self, data, addressInHex):
         offsetInInt, indexInInt, tagInBinary = self.parseHexAddress(addressInHex)
         hit, way = self.lookForAddressInCache(indexInInt, tagInBinary) # way will be the found way or what's in LRU if not found
-        if not hit:
+        if hit:
+            self.writeHits += 1
+        else:
+            self.writeMisses += 1
             blockIsDirty = self.data[indexInInt][way]['dirty']
             if blockIsDirty:
                 blockAddressInHex = self.calcAddressOfBlockInHex(indexInInt, self.data[indexInInt][way]['tag'])
@@ -183,7 +198,10 @@ class Cache(AbstractMemory):
     def readData(self, addressInHex, blockSize):
         offsetInInt, indexInInt, tagInBinary = self.parseHexAddress(addressInHex)
         hit, way = self.lookForAddressInCache(indexInInt, tagInBinary) # way will be the found way or what's in LRU if not found
-        if not hit:
+        if hit:
+            self.readHits += 1
+        else:
+            self.readMisses += 1
             blockIsDirty = self.data[indexInInt][way]['dirty']
             if blockIsDirty:
                 blockAddressInHex = self.calcAddressOfBlockInHex(indexInInt, self.data[indexInInt][way]['tag'])

@@ -11,12 +11,13 @@ L1MemorySize = 4098  # Bytes
 L2MemorySize = 32768  # Bytes
 L1HitTimeCycles = 1
 L2HitTimeCycles = 4
-MemoryAccessTime = 100
-secondaryMemoryAccessTime = 1
+mainMemoryAccessTime = 100
+secondaryMainMemoryAccessTime = 1
+l1AccessTime = 1
+l2AccessTime = 4
 wordSize = 32/8  # Bytes
 addressSize = 24/8  # Bytes
-CPUL1DataBusSize = 32/8  # Bytes
-CPUL1AddressBusSize = 24/8  # Bytes
+CPUL1BusSize = 32/8  # Bytes
 L1L2BusSize = 256/8  # Bytes
 cache2MemBusSize = 64/8  # Bytes - for both L1 and L2
 
@@ -137,3 +138,31 @@ def getL1MemorySize():
 
 def getL2MemorySize():
     return L2MemorySize
+
+def getL1HitTimeCycles():
+    return L1HitTimeCycles
+
+def getL2HitTimeCycles():
+    return L2HitTimeCycles
+
+def getCache2MemBusSize():
+    return cache2MemBusSize
+
+def getL1L2BusSize():
+    return L1L2BusSize
+
+def getCPUL1BusSize():
+    return CPUL1BusSize
+
+
+def getMainMemoryAccessTime():
+    return mainMemoryAccessTime
+
+def getSecondaryMainMemoryAccessTime():
+    return secondaryMainMemoryAccessTime
+
+def getL1AccessTime():
+    return l1AccessTime
+
+def getL2AccessTime():
+    return l2AccessTime

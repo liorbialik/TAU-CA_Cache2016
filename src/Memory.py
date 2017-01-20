@@ -1,9 +1,13 @@
-import config
-import math
 import copy
-import sys
+import math
+import config
+
 
 class AbstractMemory(object):
+    """
+    This abstract class us used for inheritance by the main memory and
+    the cache memory levels in order to have the same method names
+    """
     def __init__(self, size, nextLevelMem):
         self.size = size
         self.nextLevel = nextLevelMem
@@ -20,6 +24,17 @@ class AbstractMemory(object):
     def saveMemoryToFile(self, dstPath):
         NotImplementedError
 
+    def getBlockLocations(self, addressInInt, blockSize):
+        """
+        gets the location of the relevant block in the level of the memory
+        :param addressInInt: the address of the block we are looking for
+        :param blockSize: the size of the memory's block
+        :return addressBlockStartPos, addressBlockEndPos: the beginning and end of the wanted address
+        """
+        addressBlockStartPos = addressInInt - (addressInInt % blockSize)
+        addressBlockEndPos = addressBlockStartPos + blockSize
+        return addressBlockStartPos, addressBlockEndPos
+
 class MainMemory(AbstractMemory):
     '''
     this class will represent the main memmory
@@ -29,7 +44,7 @@ class MainMemory(AbstractMemory):
     
     def __init__(self, size, nextLevelMem, busSizeToPrevLevel, accessTime):
         """
-        initializing the memmory to zeros
+        initializing the memmory to the input of the program
         """
         super(MainMemory, self).__init__(size, nextLevelMem)
         self.memory = []
@@ -43,6 +58,10 @@ class MainMemory(AbstractMemory):
         self.writes = 0
 
     def initializeMemoryToZero(self):
+        """
+        Setting all the memory addresses to zeros
+        :return: None
+        """
         self.memory = ['00' for i in range(self.size)]
 
     def getMemoryDataFromFile(self, meminFilePath):
@@ -69,17 +88,17 @@ class MainMemory(AbstractMemory):
                     raise ValueError("memin file contains a bad line: " + hexData)
     
     def getTotalActualAccessTime(self, BlockSize):
+        """
+        Calculate the access time took for a main memory access
+        :param BlockSize: the block size of the higher memory level
+        :return totalAccessTime: the result
+        """
         busSize = self.busSizeToPrevLevel
         blockToBusSizeFactor = int(math.ceil(1.0*BlockSize/busSize))
         singleAccessTime = self.accessTime + blockToBusSizeFactor-1
         totalAccessTime = (self.reads + self.writes) * singleAccessTime
         return totalAccessTime
-    
-    def getBlockLocations(self, addressInInt, blockSize):
-        addressBlockStartPos = addressInInt - (addressInInt%blockSize)
-        addressBlockEndPos = addressBlockStartPos + blockSize
-        return addressBlockStartPos, addressBlockEndPos
-    
+
     def readData(self, addressInHex, blockSize):
         """
         returns the relevant block of data
@@ -94,7 +113,7 @@ class MainMemory(AbstractMemory):
 
     def writeData(self, data, addressInHex):
         """
-        returns the relevant block of data, assuming len(data)==blockSize
+        writes the relevant block of data to Main memory
         :param data: the desired data as array of strings
         :param addressInHex: the relevant address as string
         :return: None
@@ -107,12 +126,22 @@ class MainMemory(AbstractMemory):
         return
 
     def saveMemoryToFile(self, dstPath):
+        """
+        save the memory status into an output file
+        :param dstPath:
+        :return:
+        """
         with open(dstPath, 'w') as memoutFile:
             for i in range(self.size):
                 memoutFile.write(self.memory[i] + "\n")
             memoutFile.close()
 
+
 class Cache(AbstractMemory):
+    """
+    this class will represent the cache memmory of L1 (and L2 if present)
+    """
+
     def __init__(self, size, blockSize, cacheAssociativity, nextLevelMem, hitTimeCycles, busSizeToPrevLevel, accessTime):
         super(Cache, self).__init__(size, nextLevelMem)
         self.data = []
@@ -135,6 +164,10 @@ class Cache(AbstractMemory):
         self.initializeMemoryToZero()
 
     def initializeMemoryToZero(self):
+        """
+        Setting all the memory blocks and their respected values to zeros
+        :return: None
+        """
         wayDict = {'dirty': False,
                    'valid': False,
                    'tag': '-1',
@@ -144,24 +177,35 @@ class Cache(AbstractMemory):
         self.data = [copy.deepcopy(indexDict) for i in range(self.numberOfSets)]
     
     def getTotalActualAccessTime(self, BlockSize):
+        """
+        Calculate the access time took for a cache memory access
+        :param BlockSize: the block size of the higher memory level
+        :return totalAccessTime: the result
+        """
         busSize = self.busSizeToPrevLevel
         blockToBusSizeFactor = int(math.ceil(1.0*BlockSize/busSize))
         singleAccessTime = self.accessTime * blockToBusSizeFactor
         totalAccessTime = (self.readHits + self.writeHits
                            + self.readMisses + self.writeMisses) * singleAccessTime
         return totalAccessTime
-    
-    def getBlockLocations(self, addressInInt, blockSize):
-        addressBlockStartPos = addressInInt - (addressInInt%blockSize)
-        addressBlockEndPos = addressBlockStartPos + blockSize
-        return addressBlockStartPos, addressBlockEndPos
-    
+
     def otherWay(self, way):
+        """
+        :param way: current way of cache
+        :return: the other way
+        """
         if way == 'way0':
             return 'way1'
         return 'way0'
 
     def lookForAddressInCache(self, indexInInt, tagInBinary):
+        """
+        Searched the cache for the given address to check for a hit and re-set the LRU
+        :param indexInInt: index value of the address
+        :param tagInBinary: tag value of the address
+        :return hit: whether the it was a hit or not
+        :return _set['LRU']: the new way of the LRU field
+        """
         hit = False
         _set = self.data[indexInInt]
         for way in [key for key in _set.keys() if 'way' in key]:
@@ -171,19 +215,31 @@ class Cache(AbstractMemory):
         return hit, _set['LRU']
     
     def calcAddressOfBlockInHex(self, indexInInt, tagInBinary):
+        """
+        calculated the address of the given block in hexadecimal numbering
+        :param indexInInt:
+        :param tagInBinary:
+        :return addressInHex:
+        """
         addressInBinary = (tagInBinary + bin(indexInInt)[2:].zfill(self.indexSize)).ljust(8*config.addressSize, '0')
         addressInHex = hex(int(addressInBinary, 2))[2:]
         return addressInHex
               
     def writeData(self, data, addressInHex):
+        """
+        writes the relevant block of data to the cache memory and if needed the next level in the hierarchy.
+        updates all the relevant field accordingly
+        :param data: the desired data as array of strings
+        :param addressInHex: the relevant address as string
+        :return: None
+        """
         offsetInInt, indexInInt, tagInBinary = self.parseHexAddress(addressInHex)
         hit, way = self.lookForAddressInCache(indexInInt, tagInBinary) # way will be the found way or what's in LRU if not found
         if hit:
             self.writeHits += 1
         else:
             self.writeMisses += 1
-            blockIsDirty = self.data[indexInInt][way]['dirty']
-            if blockIsDirty:
+            if self.data[indexInInt][way]['dirty']:
                 blockAddressInHex = self.calcAddressOfBlockInHex(indexInInt, self.data[indexInInt][way]['tag'])
                 self.nextLevel.writeData(self.data[indexInInt][way]['data'], blockAddressInHex)
             self.data[indexInInt][way]['data'] = self.nextLevel.readData(addressInHex, self.blockSize)
@@ -196,6 +252,12 @@ class Cache(AbstractMemory):
             self.data[indexInInt]['LRU'] = self.otherWay(way)
 
     def readData(self, addressInHex, blockSize):
+        """
+        read the relevant block of data into the cache memory and updates all the relevant field accordingly.
+        :param blockSize: the size of the block to read (might be given by a higher level of cache)
+        :param addressInHex: the relevant address as string
+        :return: None
+        """
         offsetInInt, indexInInt, tagInBinary = self.parseHexAddress(addressInHex)
         hit, way = self.lookForAddressInCache(indexInInt, tagInBinary) # way will be the found way or what's in LRU if not found
         if hit:
@@ -206,13 +268,18 @@ class Cache(AbstractMemory):
                 blockAddressInHex = self.calcAddressOfBlockInHex(indexInInt, self.data[indexInInt][way]['tag'])
                 self.nextLevel.writeData(self.data[indexInInt][way]['data'], blockAddressInHex)
             self.data[indexInInt][way]['data'] = self.nextLevel.readData(addressInHex, self.blockSize)
+            self.data[indexInInt][way]['dirty'] = False
             self.data[indexInInt][way]['valid'] = True
             self.data[indexInInt][way]['tag'] = tagInBinary
-            self.data[indexInInt][way]['dirty'] = False
         offsetBlockStartPos, offsetBlockEndPos = self.getBlockLocations(offsetInInt, blockSize)
         return self.data[indexInInt][way]['data'][offsetBlockStartPos:offsetBlockEndPos]
     
     def saveMemoryToFile(self, dstPath):
+        """
+        save a cache memory single way status into an output file
+        :param dstPath:
+        :return:
+        """
         if 'way1' in dstPath:
             way = 'way1'
         else:
@@ -223,6 +290,11 @@ class Cache(AbstractMemory):
             memoutFile.close()
 
     def parseHexAddress(self, addressInHex):
+        """
+        parsing the address in hex
+        :param addressInHex:
+        :return offset, index, tag:
+        """
         addressInBinary = bin(int(addressInHex, 16))[2:].zfill(8*config.addressSize)
         offset = addressInBinary[-self.offsetSize:]
         index = addressInBinary[-(self.offsetSize + self.indexSize):-self.offsetSize]
@@ -230,12 +302,3 @@ class Cache(AbstractMemory):
             index = '0'
         tag = addressInBinary[:-(self.offsetSize + self.indexSize)]
         return int(offset, 2), int(index, 2), tag
-
-# TODO: not sure we need that. maybe better to work with lines?
-class MemoryBlock(object):
-    # https://github.com/lucianohgo/CacheSimulator/blob/master/src/block.py
-
-    def __init__(self, blockSize, address):
-        self.size = blockSize
-        self.address = address
-        self.valid = False

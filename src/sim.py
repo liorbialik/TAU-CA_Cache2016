@@ -5,6 +5,14 @@ from utils import Utils
 
 
 def saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache, statResults):
+    """
+    Saves the current snapshot the memory hierarchy into default files
+    :param mainMemory:
+    :param l1Cache:
+    :param l2Cache:
+    :param statResults:
+    :return: None
+    """
     mainMemory.saveMemoryToFile(config.getMainMemoryStatusOutputFilePath())
     l1Cache.saveMemoryToFile(config.getL1CacheStatusOutputFilePath())
     if l2Cache:
@@ -17,7 +25,10 @@ def saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache, statResults):
 
 
 def runSimulation():
-
+    """
+    the reading the the input trace file and execution of the commands in the given cache-memory scheme.
+    :return: None
+    """
     mainMemory = Memory.MainMemory(config.getMainMemorySize(), None,
                                    config.getCache2MemBusSize(), config.getMainMemoryAccessTime())
 
@@ -40,11 +51,11 @@ def runSimulation():
     with open(config.getTraceFilePath()) as traceFile:
         for line in traceFile:
             if 'S' in line:
-                numberOfCyclesBeforeCmd, dstMemoryAddressStr, dataToStore = Utils.parseStoreLine(line)
+                numberOfCyclesBeforeCmd, dstMemoryAddressStr, dataToStore = Utils.parseStoreCmd(line)
                 l1Cache.writeData(dataToStore, dstMemoryAddressStr)  
     
             else:
-                numberOfCyclesBeforeCmd, srcMemoryAddressStr = Utils.parseLoadLine(line)
+                numberOfCyclesBeforeCmd, srcMemoryAddressStr = Utils.parseLoadCmd(line)
                 l1Cache.readData(srcMemoryAddressStr, 4)
     
             totalNumberOfCycles += int(numberOfCyclesBeforeCmd) 

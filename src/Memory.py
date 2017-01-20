@@ -202,11 +202,12 @@ class Cache(AbstractMemory):
             self.readHits += 1
         else:
             self.readMisses += 1
-            blockIsDirty = self.data[indexInInt][way]['dirty']
-            if blockIsDirty:
+            if self.data[indexInInt][way]['dirty']:
                 blockAddressInHex = self.calcAddressOfBlockInHex(indexInInt, self.data[indexInInt][way]['tag'])
                 self.nextLevel.writeData(self.data[indexInInt][way]['data'], blockAddressInHex)
             self.data[indexInInt][way]['data'] = self.nextLevel.readData(addressInHex, self.blockSize)
+            self.data[indexInInt][way]['valid'] = True
+            self.data[indexInInt][way]['tag'] = tagInBinary
             self.data[indexInInt][way]['dirty'] = False
         offsetBlockStartPos, offsetBlockEndPos = self.getBlockLocations(offsetInInt, blockSize)
         return self.data[indexInInt][way]['data'][offsetBlockStartPos:offsetBlockEndPos]

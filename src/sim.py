@@ -8,14 +8,14 @@ def sumStatResults(totalNumberOfCycles, mainMemory, l1Cache, l2Cache):
     if l2Cache == None:
         mainMemoryAccessTime = mainMemory.getTotalActualAccessTime(l1Cache.blockSize)
         l2CacheAccessTime = 0
-        l1CacheAccessTime = mainMemory.getTotalActualAccessTime(4)
+        l1CacheAccessTime = l1Cache.getTotalActualAccessTime(4)
         l2Misses = 0
         l2Hits = 0
 
     else:
         mainMemoryAccessTime = mainMemory.getTotalActualAccessTime(l2Cache.blockSize)
-        l2CacheAccessTime = mainMemory.getTotalActualAccessTime(l1Cache.blockSize)
-        l1CacheAccessTime = mainMemory.getTotalActualAccessTime(4)
+        l2CacheAccessTime = l2Cache.getTotalActualAccessTime(l1Cache.blockSize)
+        l1CacheAccessTime = l1Cache.getTotalActualAccessTime(4)
         l2Misses = (l2Cache.readMisses + l2Cache.writeMisses)
         l2Hits = (l2Cache.readHits + l2Cache.writeHits)
 

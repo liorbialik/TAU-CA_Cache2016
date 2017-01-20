@@ -1,60 +1,8 @@
 import sys
 import Memory
 import config
-from Utils import ParsingUtils
+from utils import Utils
 
-
-def sumStatResults(totalNumberOfCycles, mainMemory, l1Cache, l2Cache):
-    if l2Cache == None:
-        mainMemoryAccessTime = mainMemory.getTotalActualAccessTime(l1Cache.blockSize)
-        l2CacheAccessTime = 0
-        l1CacheAccessTime = l1Cache.getTotalActualAccessTime(4)
-        l2Misses = 0
-        l2Hits = 0
-
-    else:
-        mainMemoryAccessTime = mainMemory.getTotalActualAccessTime(l2Cache.blockSize)
-        l2CacheAccessTime = l2Cache.getTotalActualAccessTime(l1Cache.blockSize)
-        l1CacheAccessTime = l1Cache.getTotalActualAccessTime(4)
-        l2Misses = (l2Cache.readMisses + l2Cache.writeMisses)
-        l2Hits = (l2Cache.readHits + l2Cache.writeHits)
-
-    totalAccessTime = mainMemoryAccessTime + l2CacheAccessTime + l1CacheAccessTime
-    programRunningTimeInCycles = totalNumberOfCycles + totalAccessTime
-    l1Misses = (l1Cache.readMisses + l1Cache.writeMisses)
-    l1Hits = (l1Cache.readHits + l1Cache.writeHits)
-    l1LocalMissRate = (1.0 * l1Misses) / (l1Misses + l1Hits)
-    globalMissRate = (1.0 * l1Misses + l2Misses) / (l1Misses + l1Hits + l2Misses + l2Hits)
-    amat = (1.0 * programRunningTimeInCycles) / (l1Misses + l1Hits + l2Misses + l2Hits) 
-    
-    if l2Cache != None:
-        stats = [programRunningTimeInCycles,
-                 l1Cache.readHits,
-                 l1Cache.writeHits,
-                 l1Cache.readMisses,
-                 l1Cache.writeMisses,
-                 l2Cache.readHits,
-                 l2Cache.writeHits,
-                 l2Cache.readMisses,
-                 l2Cache.writeMisses,
-                 format(l1LocalMissRate, '.4f'),
-                 format(globalMissRate, '.4f'),
-                 format(amat, '.4f')]
-    else:
-        stats = [programRunningTimeInCycles,
-                 l1Cache.readHits,
-                 l1Cache.writeHits,
-                 l1Cache.readMisses,
-                 l1Cache.writeMisses,
-                 0,
-                 0,
-                 0,
-                 0,
-                 format(l1LocalMissRate, '.4f'),
-                 format(globalMissRate, '.4f'),
-                 format(amat, '.4f')]
-    
-    return stats
 
 def saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache, statResults):
     mainMemory.saveMemoryToFile(config.getMainMemoryStatusOutputFilePath())
@@ -66,6 +14,7 @@ def saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache, statResults):
     with open(config.getStatsFileName(), 'w') as statsFile:
         for stat in statResults:
             statsFile.write(str(stat) + '\n')
+
 
 def runSimulation():
 
@@ -91,17 +40,18 @@ def runSimulation():
     with open(config.getTraceFilePath()) as traceFile:
         for line in traceFile:
             if 'S' in line:
-                numberOfCyclesBeforeCmd, dstMemoryAddressStr, dataToStore = ParsingUtils.parseStoreLineIntoStoreVariables(line)  
+                numberOfCyclesBeforeCmd, dstMemoryAddressStr, dataToStore = Utils.parseStoreLine(line)
                 l1Cache.writeData(dataToStore, dstMemoryAddressStr)  
     
-            if 'L' in line:
-                numberOfCyclesBeforeCmd, srcMemoryAddressStr = ParsingUtils.parseLoadLineIntoStoreVariables(line)
-                l1Cache.readData(srcMemoryAddressStr, 4) 
+            else:
+                numberOfCyclesBeforeCmd, srcMemoryAddressStr = Utils.parseLoadLine(line)
+                l1Cache.readData(srcMemoryAddressStr, 4)
     
             totalNumberOfCycles += int(numberOfCyclesBeforeCmd) 
-    statResults = sumStatResults(totalNumberOfCycles, mainMemory, l1Cache, l2Cache)
+    statResults = Utils.sumStatResults(totalNumberOfCycles, mainMemory, l1Cache, l2Cache)
     saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache, statResults)
     print 'DONE'
+
 
 if __name__ == "__main__":
     try:

@@ -30,19 +30,19 @@ def runSimulation():
     :return: None
     """
     print("Beginning Simulation!\n")
-    mainMemory = Memory.MainMemory(config.getMainMemorySize(), None,
+    mainMemory = Memory.MainMemory("Main Memory", config.getMainMemorySize(), None,
                                    config.getCache2MemBusSize(), config.getMainMemoryAccessTime())
 
     if config.getLevelsOfCache() == 1:
-        l1Cache = Memory.Cache(config.getL1MemorySize(), config.getBlockSizeForL1Cache(),
+        l1Cache = Memory.Cache("L1 Cache", config.getL1MemorySize(), config.getBlockSizeForL1Cache(),
                                1, mainMemory, config.getL1HitTimeCycles(),
                                config.getCPUL1BusSize(), config.getL1AccessTime())
         l2Cache = None
     else:
-        l2Cache = Memory.Cache(config.getL2MemorySize(), config.getBlockSizeForL2Cache(),
+        l2Cache = Memory.Cache("L2 Cache", config.getL2MemorySize(), config.getBlockSizeForL2Cache(),
                                2, mainMemory, config.getL2HitTimeCycles(),
                                config.getL1L2BusSize(), config.getL2AccessTime())
-        l1Cache = Memory.Cache(config.getL1MemorySize(), config.getBlockSizeForL1Cache(),
+        l1Cache = Memory.Cache("L1 Cache", config.getL1MemorySize(), config.getBlockSizeForL1Cache(),
                                1, l2Cache, config.getL1HitTimeCycles(),
                                config.getCPUL1BusSize(), config.getL1AccessTime())
 

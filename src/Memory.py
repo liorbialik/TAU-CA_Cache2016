@@ -8,7 +8,8 @@ class AbstractMemory(object):
     This abstract class us used for inheritance by the main memory and
     the cache memory levels in order to have the same method names
     """
-    def __init__(self, size, nextLevelMem):
+    def __init__(self, name, size, nextLevelMem):
+        self.name = name
         self.size = size
         self.nextLevel = nextLevelMem
 
@@ -42,12 +43,13 @@ class MainMemory(AbstractMemory):
 
     memory = []
     
-    def __init__(self, size, nextLevelMem, busSizeToPrevLevel, accessTime):
+    def __init__(self, name, size, nextLevelMem, busSizeToPrevLevel, accessTime):
         """
         initializing the memmory to the input of the program
         """
-        super(MainMemory, self).__init__(size, nextLevelMem)
+        super(MainMemory, self).__init__(name, size, nextLevelMem)
         self.memory = []
+        self.name = name
         self.size = size
         self.outputLogFileName = config.getMainMemoryStatusOutputFilePath()
         self.initializeMemoryToZero()
@@ -62,6 +64,7 @@ class MainMemory(AbstractMemory):
         Setting all the memory addresses to zeros
         :return: None
         """
+        print("initializing %s to zero" % self.name)
         self.memory = ['00' for i in range(self.size)]
 
     def getMemoryDataFromFile(self, meminFilePath):
@@ -70,6 +73,7 @@ class MainMemory(AbstractMemory):
         :param meminFilePath: the path to the memin.txt file
         :return: none
         """
+        print("loading the memory data from %s into the main memory" % meminFilePath)
         with open(meminFilePath, 'r') as memfile:
             i = 0
             for line in memfile.readlines():
@@ -142,9 +146,10 @@ class Cache(AbstractMemory):
     this class will represent the cache memmory of L1 (and L2 if present)
     """
 
-    def __init__(self, size, blockSize, cacheAssociativity, nextLevelMem, hitTimeCycles, busSizeToPrevLevel, accessTime):
-        super(Cache, self).__init__(size, nextLevelMem)
+    def __init__(self, name, size, blockSize, cacheAssociativity, nextLevelMem, hitTimeCycles, busSizeToPrevLevel, accessTime):
+        super(Cache, self).__init__(name, size, nextLevelMem)
         self.data = []
+        self.name = name
         self.size = size
         self.blockSize = blockSize
         self.associativity = cacheAssociativity
@@ -168,6 +173,7 @@ class Cache(AbstractMemory):
         Setting all the memory blocks and their respected values to zeros
         :return: None
         """
+        print("initializing %s to zero" % self.name)
         wayDict = {'dirty': False,
                    'valid': False,
                    'tag': '-1',
@@ -206,12 +212,15 @@ class Cache(AbstractMemory):
         :return hit: whether the it was a hit or not
         :return _set['LRU']: the new way of the LRU field
         """
+        print("looking for a hit in %s" % self.name)
         hit = False
         _set = self.data[indexInInt]
         for way in [key for key in _set.keys() if 'way' in key]:
             if _set[way]['tag'] == tagInBinary and _set[way]['valid']:
+                print("got a hit!")
                 hit = True
                 return hit, way
+        print("got a miss!")
         return hit, _set['LRU']
     
     def calcAddressOfBlockInHex(self, indexInInt, tagInBinary):
@@ -291,7 +300,7 @@ class Cache(AbstractMemory):
         :return: None
         """
         if self.associativity == 2:
-            print("Updating LRU")
+            print("Updating LRU in %s" % self.name)
             self.data[indexInInt]['LRU'] = self.otherWay(way)
 
     def saveMemoryToFile(self, dstPath):
@@ -300,6 +309,7 @@ class Cache(AbstractMemory):
         :param dstPath:
         :return:
         """
+        print("saving memory status of %s into the output file %s" % (self.name, dstPath))
         if 'way1' in dstPath:
             way = 'way1'
         else:

@@ -29,6 +29,7 @@ def runSimulation():
     the reading the the input trace file and execution of the commands in the given cache-memory scheme.
     :return: None
     """
+    print("Beginning Simulation!\n")
     mainMemory = Memory.MainMemory(config.getMainMemorySize(), None,
                                    config.getCache2MemBusSize(), config.getMainMemoryAccessTime())
 
@@ -50,21 +51,25 @@ def runSimulation():
     totalNumberOfCycles = 0
     with open(config.getTraceFilePath()) as traceFile:
         for line in traceFile:
+            print("Parsing current command line:" + line)
             if 'S' in line:
                 numberOfCyclesBeforeCmd, dstMemoryAddressStr, dataToStore = Utils.parseStoreCmd(line)
-                l1Cache.writeData(dataToStore, dstMemoryAddressStr)  
-    
+                print("executing Store command to address %s with data: %s" % (str(dstMemoryAddressStr), str(dataToStore)))
+                l1Cache.writeData(dataToStore, dstMemoryAddressStr)
+
             else:
                 numberOfCyclesBeforeCmd, srcMemoryAddressStr = Utils.parseLoadCmd(line)
+                print("executing Load command from address: %s" % str(srcMemoryAddressStr))
                 l1Cache.readData(srcMemoryAddressStr, 4)
-    
+
             totalNumberOfCycles += int(numberOfCyclesBeforeCmd) 
+            print("\n\n")
     statResults = Utils.sumStatResults(totalNumberOfCycles, mainMemory, l1Cache, l2Cache)
     saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache, statResults)
     print 'DONE'
 
 
-if __name__ == "__main__":
+def main():
     try:
         config.options = config.getCmdLineOptions()
     except AssertionError as e:
@@ -72,3 +77,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     runSimulation()
+
+if __name__ == "__main__":
+    main()

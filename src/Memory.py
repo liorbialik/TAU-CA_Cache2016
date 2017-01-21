@@ -240,16 +240,14 @@ class Cache(AbstractMemory):
         else:
             self.writeMisses += 1
             if self.data[indexInInt][way]['dirty']:
-                blockAddressInHex = self.calcAddressOfBlockInHex(indexInInt, self.data[indexInInt][way]['tag'])
-                self.nextLevel.writeData(self.data[indexInInt][way]['data'], blockAddressInHex)
+                self.preformWriteBack(indexInInt, way)
             self.data[indexInInt][way]['data'] = self.nextLevel.readData(addressInHex, self.blockSize)
         offsetBlockStartPos, offsetBlockEndPos = self.getBlockLocations(offsetInInt, len(data))
         self.data[indexInInt][way]['data'][offsetBlockStartPos:offsetBlockEndPos] = data
         self.data[indexInInt][way]['dirty'] = True
         self.data[indexInInt][way]['valid'] = True
         self.data[indexInInt][way]['tag'] = tagInBinary
-        if self.associativity == 2:
-            self.data[indexInInt]['LRU'] = self.otherWay(way)
+        self.updateLRU(indexInInt, way)
 
     def readData(self, addressInHex, blockSize):
         """
@@ -259,21 +257,43 @@ class Cache(AbstractMemory):
         :return: None
         """
         offsetInInt, indexInInt, tagInBinary = self.parseHexAddress(addressInHex)
-        hit, way = self.lookForAddressInCache(indexInInt, tagInBinary) # way will be the found way or what's in LRU if not found
+        hit, way = self.lookForAddressInCache(indexInInt, tagInBinary)
         if hit:
             self.readHits += 1
         else:
             self.readMisses += 1
             if self.data[indexInInt][way]['dirty']:
-                blockAddressInHex = self.calcAddressOfBlockInHex(indexInInt, self.data[indexInInt][way]['tag'])
-                self.nextLevel.writeData(self.data[indexInInt][way]['data'], blockAddressInHex)
+                self.preformWriteBack(indexInInt, way)
             self.data[indexInInt][way]['data'] = self.nextLevel.readData(addressInHex, self.blockSize)
             self.data[indexInInt][way]['dirty'] = False
             self.data[indexInInt][way]['valid'] = True
             self.data[indexInInt][way]['tag'] = tagInBinary
+        self.updateLRU(indexInInt, way)
         offsetBlockStartPos, offsetBlockEndPos = self.getBlockLocations(offsetInInt, blockSize)
         return self.data[indexInInt][way]['data'][offsetBlockStartPos:offsetBlockEndPos]
-    
+
+    def preformWriteBack(self, indexInInt, way):
+        """
+        preforming writeback in case of a 'on' dirty bit
+        :param indexInInt:
+        :param way:
+        :return: None
+        """
+        print("Preforming writeback")
+        blockAddressInHex = self.calcAddressOfBlockInHex(indexInInt, self.data[indexInInt][way]['tag'])
+        self.nextLevel.writeData(self.data[indexInInt][way]['data'], blockAddressInHex)
+
+    def updateLRU(self, indexInInt, way):
+        """
+        preforming an update to the LRU field of the given index
+        :param indexInInt:
+        :param way:
+        :return: None
+        """
+        if self.associativity == 2:
+            print("Updating LRU")
+            self.data[indexInInt]['LRU'] = self.otherWay(way)
+
     def saveMemoryToFile(self, dstPath):
         """
         save a cache memory single way status into an output file

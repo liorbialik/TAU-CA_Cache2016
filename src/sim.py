@@ -2,7 +2,8 @@ import sys
 import Memory
 import config
 from utils import Utils
-
+import time
+import matplotlib.pyplot as plt
 
 def saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache, statResults):
     """
@@ -67,7 +68,51 @@ def runSimulation():
     statResults = Utils.sumStatResults(totalNumberOfCycles, mainMemory, l1Cache, l2Cache)
     saveSimulationResultsToFiles(mainMemory, l1Cache, l2Cache, statResults)
     print 'DONE'
+    return statResults
 
+def graph1ForTestTrace():
+    L1MissRate = []
+    for blockSize in config.validL1BlockSizes:
+        config.options.b1 = blockSize
+        simulationResults = runSimulation()
+        L1MissRate.append(simulationResults[-3])
+    plt.plot(config.validL1BlockSizes, L1MissRate, 'g^')
+    plt.title("L1 Miss Rate relative to the block size")
+    plt.xlabel("L1 Block Size [Bytes]")
+    plt.ylabel("L1 Miss Rate")
+    plt.show()
+
+def graph2ForTestTrace():
+    simulationRunningTimeList = []
+    config.options.levels = 2
+    config.options.b2 = 128
+    for blockSize in config.validL1BlockSizes:
+        config.options.b1 = blockSize
+        # startTime = time.time()
+        simulationResults = runSimulation()
+        # simulationRunningTime = time.time() - startTime
+        simulationRunningTimeList.append(simulationResults[0])
+    plt.plot(config.validL1BlockSizes, simulationRunningTimeList, 'g^')
+    plt.title("Simulation running time relative to L1 block size")
+    plt.xlabel("L1 Block Size [Bytes]")
+    plt.ylabel("Running Time [Cycles]")
+    plt.show()
+
+def graph3ForTestTrace():
+    config.options.levels = 2
+    config.options.b1 = 8
+    amatList = []
+    L2BlockSizes = [8, 16, 32, 64, 128, 256]
+    for blockSize in L2BlockSizes:
+        config.options.b2 = blockSize
+        simulationResults = runSimulation()
+        amatList.append(simulationResults[-1])
+    plt.plot(L2BlockSizes, amatList, 'g^')
+    plt.title("AMAT result relative to L2 block size")
+    plt.xlabel("L2 Block Size [Bytes]")
+    plt.ylabel("AMAT")
+    plt.show()
+    plt.show()
 
 def main():
     try:
@@ -76,7 +121,10 @@ def main():
         print(e.message)
         sys.exit(1)
 
-    runSimulation()
+    graph1ForTestTrace()
+    # graph2ForTestTrace()
+    # graph3ForTestTrace()
 
 if __name__ == "__main__":
     main()
+

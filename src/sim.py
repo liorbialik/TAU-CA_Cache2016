@@ -60,7 +60,7 @@ def runSimulation():
             else:
                 numberOfCyclesBeforeCmd, srcMemoryAddressStr = Utils.parseLoadCmd(line)
                 print("executing Load command from address: %s" % str(srcMemoryAddressStr))
-                l1Cache.readData(srcMemoryAddressStr, 4)
+                l1Cache.readData(srcMemoryAddressStr, config.getWordSize())
 
             totalNumberOfCycles += int(numberOfCyclesBeforeCmd) 
             print("\n\n")

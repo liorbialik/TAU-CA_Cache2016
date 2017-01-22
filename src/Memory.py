@@ -8,6 +8,7 @@ class AbstractMemory(object):
     This abstract class us used for inheritance by the main memory and
     the cache memory levels in order to have the same method names
     """
+    TAB=''
     def __init__(self, name, size, nextLevelMem):
         self.name = name
         self.size = size
@@ -127,6 +128,7 @@ class MainMemory(AbstractMemory):
         blockSize = len(data)
         addressBlockStartPos, addressBlockEndPos = self.getBlockLocations(addressInInt, blockSize)
         self.memory[addressBlockStartPos:addressBlockEndPos] = data
+        print AbstractMemory.TAB+"mainMemory was updated at position [{start}:{end}] with {Data}".format(Data=data, start=addressBlockStartPos, end=addressBlockEndPos)
         return
 
     def saveMemoryToFile(self, dstPath):
@@ -212,15 +214,14 @@ class Cache(AbstractMemory):
         :return hit: whether the it was a hit or not
         :return _set['LRU']: the new way of the LRU field
         """
-        print("looking for a hit in %s" % self.name)
         hit = False
         _set = self.data[indexInInt]
         for way in [key for key in _set.keys() if 'way' in key]:
             if _set[way]['tag'] == tagInBinary and _set[way]['valid']:
-                print("got a hit!")
+                print("HIT!")
                 hit = True
                 return hit, way
-        print("got a miss!")
+        print("MISS!")
         return hit, _set['LRU']
     
     def calcAddressOfBlockInHex(self, indexInInt, tagInBinary):
@@ -243,17 +244,22 @@ class Cache(AbstractMemory):
         :return: None
         """
         offsetInInt, indexInInt, tagInBinary = self.parseHexAddress(addressInHex)
+        print AbstractMemory.TAB+"trying to write data to {name} from address:{addr} at index:{i}, tag:{t}...".format(name=self.name, addr=addressInHex.zfill(6), i=indexInInt, t=tagInBinary),
         hit, way = self.lookForAddressInCache(indexInInt, tagInBinary) # way will be the found way or what's in LRU if not found
         if hit:
             self.writeHits += 1
         else:
+            print AbstractMemory.TAB+"writing data to {cur} from {next}".format(cur=self.name, next=self.nextLevel.name)
+            AbstractMemory.TAB+='\t'
             self.writeMisses += 1
             if self.data[indexInInt][way]['dirty']:
-                self.preformWriteBack(indexInInt, way)
+                self.performWriteBack(indexInInt, way)
             self.data[indexInInt][way]['data'] = self.nextLevel.readData(addressInHex, self.blockSize)
+            AbstractMemory.TAB = AbstractMemory.TAB[:-1]
         offsetBlockStartPos, offsetBlockEndPos = self.getBlockLocations(offsetInInt, len(data))
         self.data[indexInInt][way]['data'][offsetBlockStartPos:offsetBlockEndPos] = data
         self.data[indexInInt][way]['dirty'] = True
+        print AbstractMemory.TAB+"data was written to {name}. dirtyBit:True".format(name=self.name)
         self.data[indexInInt][way]['valid'] = True
         self.data[indexInInt][way]['tag'] = tagInBinary
         self.updateLRU(indexInInt, way)
@@ -266,31 +272,39 @@ class Cache(AbstractMemory):
         :return: None
         """
         offsetInInt, indexInInt, tagInBinary = self.parseHexAddress(addressInHex)
+        print AbstractMemory.TAB+"trying to read data to {name} from address:{addr} at index:{i}, tag:{t}...".format(name=self.name, addr=addressInHex.zfill(6), i=indexInInt, t=tagInBinary),
         hit, way = self.lookForAddressInCache(indexInInt, tagInBinary)
         if hit:
             self.readHits += 1
         else:
+            print AbstractMemory.TAB+"reading data to {cur} from {next}".format(cur=self.name, next=self.nextLevel.name)
+            AbstractMemory.TAB+='\t'
             self.readMisses += 1
             if self.data[indexInInt][way]['dirty']:
-                self.preformWriteBack(indexInInt, way)
+                self.performWriteBack(indexInInt, way)
             self.data[indexInInt][way]['data'] = self.nextLevel.readData(addressInHex, self.blockSize)
+            AbstractMemory.TAB = AbstractMemory.TAB[:-1]
             self.data[indexInInt][way]['dirty'] = False
+            print AbstractMemory.TAB+"data was written to {name}. dirtyBit:False".format(name=self.name)
             self.data[indexInInt][way]['valid'] = True
             self.data[indexInInt][way]['tag'] = tagInBinary
         self.updateLRU(indexInInt, way)
         offsetBlockStartPos, offsetBlockEndPos = self.getBlockLocations(offsetInInt, blockSize)
         return self.data[indexInInt][way]['data'][offsetBlockStartPos:offsetBlockEndPos]
 
-    def preformWriteBack(self, indexInInt, way):
+    def performWriteBack(self, indexInInt, way):
         """
         preforming writeback in case of a 'on' dirty bit
         :param indexInInt:
         :param way:
         :return: None
         """
-        print("Preforming writeback")
         blockAddressInHex = self.calcAddressOfBlockInHex(indexInInt, self.data[indexInInt][way]['tag'])
+        print(AbstractMemory.TAB+"Performing writeback of address:{addr} from {cur} to {next}".format(addr=blockAddressInHex.upper(), cur=self.name, next=self.nextLevel.name))
+        AbstractMemory.TAB+='\t'
         self.nextLevel.writeData(self.data[indexInInt][way]['data'], blockAddressInHex)
+        AbstractMemory.TAB=AbstractMemory.TAB[:-1]
+        print(AbstractMemory.TAB+"Ended writeback of {name}".format(name=self.name))
 
     def updateLRU(self, indexInInt, way):
         """
@@ -300,8 +314,8 @@ class Cache(AbstractMemory):
         :return: None
         """
         if self.associativity == 2:
-            print("Updating LRU in %s" % self.name)
             self.data[indexInInt]['LRU'] = self.otherWay(way)
+            print(AbstractMemory.TAB+"Updating LRU in {name} to {w}".format(name=self.name, w=self.data[indexInInt]['LRU']))
 
     def saveMemoryToFile(self, dstPath):
         """

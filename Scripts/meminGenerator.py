@@ -1,6 +1,6 @@
 import random
 
-NUMBER_OF_MEMORY_DATA = 1000
+NUMBER_OF_MEMORY_DATA = 3000
 
 def generateHexNumber(length):
     return ''.join([random.choice('0123456789ABCDEF') for x in range(length)])

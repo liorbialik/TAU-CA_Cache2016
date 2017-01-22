@@ -1,9 +1,9 @@
 import random
 
-NUMBER_OF_COMMANDS = 100
+NUMBER_OF_COMMANDS = 50000
 
 def generateHexNumber(length):
-    return ''.join([random.choice('0123456789ABCDEF') for x in range(length)])
+    return ''.join([random.choice('0123456789ABCDEF') for x in range(length)]).zfill(6)
 
 def generateCommandsNumber():
     return random.randint(1, 100)

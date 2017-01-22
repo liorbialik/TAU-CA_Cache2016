@@ -92,17 +92,20 @@ class MainMemory(AbstractMemory):
                 else:
                     raise ValueError("memin file contains a bad line: " + hexData)
     
-    def getTotalActualAccessTime(self, BlockSize):
+    def getSingleAccessTime(self, BlockSize):
+        busSize = self.busSizeToPrevLevel
+        blockToBusSizeFactor = int(math.ceil(1.0*BlockSize/busSize))
+        print "{name} blockToBusSizeFactor = {b}".format(name=self.name, b=blockToBusSizeFactor)
+        return self.accessTime + blockToBusSizeFactor-1
+
+    def getTotalAccessTime(self, BlockSize):
         """
         Calculate the access time took for a main memory access
         :param BlockSize: the block size of the higher memory level
         :return totalAccessTime: the result
         """
-        busSize = self.busSizeToPrevLevel
-        blockToBusSizeFactor = int(math.ceil(1.0*BlockSize/busSize))
-        print "{name} blockToBusSizeFactor = {b}".format(name=self.name, b=blockToBusSizeFactor)
+        singleAccessTime = self.getSingleAccessTime(BlockSize)
         print "mainMemory reads:", self.reads, "writes:", self.writes
-        singleAccessTime = self.accessTime + blockToBusSizeFactor-1
         totalAccessTime = (self.reads + self.writes) * singleAccessTime
         return totalAccessTime
 
@@ -187,17 +190,20 @@ class Cache(AbstractMemory):
         indexDict = {'way'+str(num): copy.deepcopy(wayDict) for num in range(self.associativity)}
         indexDict['LRU'] = 'way0'
         self.data = [copy.deepcopy(indexDict) for i in range(self.numberOfSets)]
+
+    def getSingleAccessTime(self, BlockSize):
+        busSize = self.busSizeToPrevLevel
+        blockToBusSizeFactor = int(math.ceil(1.0*BlockSize/busSize))
+        print "{name} blockToBusSizeFactor = {b}".format(name=self.name, b=blockToBusSizeFactor)
+        return self.accessTime * blockToBusSizeFactor
     
-    def getTotalActualAccessTime(self, BlockSize):
+    def getTotalAccessTime(self, BlockSize):
         """
         Calculate the access time took for a cache memory access
         :param BlockSize: the block size of the higher memory level
         :return totalAccessTime: the result
         """
-        busSize = self.busSizeToPrevLevel
-        blockToBusSizeFactor = int(math.ceil(1.0*BlockSize/busSize))
-        print "{name} blockToBusSizeFactor = {b}".format(name=self.name, b=blockToBusSizeFactor)
-        singleAccessTime = self.accessTime * blockToBusSizeFactor
+        singleAccessTime = self.getSingleAccessTime(BlockSize) 
         totalAccessTime = (self.readHits + self.writeHits
                            + self.readMisses + self.writeMisses) * singleAccessTime
         return totalAccessTime

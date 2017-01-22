@@ -38,16 +38,16 @@ class Utils(object):
         :return stats: A list containing all the results
         """
         if l2Cache is None:
-            mainMemoryAccessTime = mainMemory.getTotalActualAccessTime(l1Cache.blockSize)
+            mainMemoryAccessTime = mainMemory.getTotalAccessTime(l1Cache.blockSize)
             l2CacheAccessTime = 0
-            l1CacheAccessTime = l1Cache.getTotalActualAccessTime(config.getWordSize())
+            l1CacheAccessTime = l1Cache.getTotalAccessTime(config.getWordSize())
             l2Misses = 0
             l2Hits = 0
             l2Stats = [0, 0, 0, 0]
         else:
-            mainMemoryAccessTime = mainMemory.getTotalActualAccessTime(l2Cache.blockSize)
-            l2CacheAccessTime = l2Cache.getTotalActualAccessTime(l1Cache.blockSize)
-            l1CacheAccessTime = l1Cache.getTotalActualAccessTime(config.getWordSize())
+            mainMemoryAccessTime = mainMemory.getTotalAccessTime(l2Cache.blockSize)
+            l2CacheAccessTime = l2Cache.getTotalAccessTime(l1Cache.blockSize)
+            l1CacheAccessTime = l1Cache.getTotalAccessTime(config.getWordSize())
             l2Misses = (l2Cache.readMisses + l2Cache.writeMisses)
             l2Hits = (l2Cache.readHits + l2Cache.writeHits)
             l2Stats = [l2Cache.readHits, l2Cache.writeHits, l2Cache.readMisses, l2Cache.writeMisses]
@@ -58,9 +58,14 @@ class Utils(object):
         l1Misses = (l1Cache.readMisses + l1Cache.writeMisses)
         l1Hits = (l1Cache.readHits + l1Cache.writeHits)
         l1LocalMissRate = (1.0 * l1Misses) / (l1Misses + l1Hits)
+        l2LocalMissRate = (1.0 * l2Misses) / (l2Misses + l2Hits)
         globalMissRate = (1.0 * l1Misses + l2Misses) / (l1Misses + l1Hits + l2Misses + l2Hits)
-        amat = (1.0 * programRunningTimeInCycles) / (l1Misses + l1Hits + l2Misses + l2Hits)
-
+        if l2Cache is None:
+            l1MissPenalty = mainMemory.getSingleAccessTime(l1Cache.blockSize)
+        else:
+            l2MissPenalty = mainMemory.getSingleAccessTime(l2Cache.blockSize)
+            l1MissPenalty = l2Cache.getSingleAccessTime(l1Cache.blockSize)+1.0*l2LocalMissRate*(l2MissPenalty)
+        amat = l1Cache.getSingleAccessTime(config.getWordSize())+1.0*l1LocalMissRate*(l1MissPenalty)
         l1Stats = [l1Cache.readHits, l1Cache.writeHits, l1Cache.readMisses, l1Cache.writeMisses]
         generalStats = [format(l1LocalMissRate, '.4f'), format(globalMissRate, '.4f'), format(amat, '.4f')]
         stats = [programRunningTimeInCycles] + l1Stats + l2Stats + generalStats

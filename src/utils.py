@@ -58,11 +58,11 @@ class Utils(object):
         l1Misses = (l1Cache.readMisses + l1Cache.writeMisses)
         l1Hits = (l1Cache.readHits + l1Cache.writeHits)
         l1LocalMissRate = (1.0 * l1Misses) / (l1Misses + l1Hits)
-        l2LocalMissRate = (1.0 * l2Misses) / (l2Misses + l2Hits)
         globalMissRate = (1.0 * l1Misses + l2Misses) / (l1Misses + l1Hits + l2Misses + l2Hits)
         if l2Cache is None:
             l1MissPenalty = mainMemory.getSingleAccessTime(l1Cache.blockSize)
         else:
+            l2LocalMissRate = (1.0 * l2Misses) / (l2Misses + l2Hits)
             l2MissPenalty = mainMemory.getSingleAccessTime(l2Cache.blockSize)
             l1MissPenalty = l2Cache.getSingleAccessTime(l1Cache.blockSize)+1.0*l2LocalMissRate*(l2MissPenalty)
         amat = l1Cache.getSingleAccessTime(config.getWordSize())+1.0*l1LocalMissRate*(l1MissPenalty)

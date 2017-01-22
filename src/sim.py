@@ -121,9 +121,10 @@ def main():
         print(e.message)
         sys.exit(1)
 
-    graph1ForTestTrace()
-    # graph2ForTestTrace()
-    # graph3ForTestTrace()
+#     graph1ForTestTrace()
+#     graph2ForTestTrace()
+#     graph3ForTestTrace()
+    runSimulation()
 
 if __name__ == "__main__":
     main()

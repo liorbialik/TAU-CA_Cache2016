@@ -100,6 +100,8 @@ class MainMemory(AbstractMemory):
         """
         busSize = self.busSizeToPrevLevel
         blockToBusSizeFactor = int(math.ceil(1.0*BlockSize/busSize))
+        print "{name} blockToBusSizeFactor = {b}".format(name=self.name, b=blockToBusSizeFactor)
+        print "mainMemory reads:", self.reads, "writes:", self.writes
         singleAccessTime = self.accessTime + blockToBusSizeFactor-1
         totalAccessTime = (self.reads + self.writes) * singleAccessTime
         return totalAccessTime
@@ -112,6 +114,7 @@ class MainMemory(AbstractMemory):
         :return: the desired block of data
         """
         self.reads += 1
+        print AbstractMemory.TAB + "***** +1 mainMemory read"
         addressInInt = int(addressInHex, 16)
         addressBlockStartPos, addressBlockEndPos = self.getBlockLocations(addressInInt, blockSize)
         return self.memory[addressBlockStartPos:addressBlockEndPos]
@@ -124,6 +127,7 @@ class MainMemory(AbstractMemory):
         :return: None
         """
         self.writes += 1
+        print AbstractMemory.TAB + "***** +1 mainMemory write"
         addressInInt = int(addressInHex, 16)
         blockSize = len(data)
         addressBlockStartPos, addressBlockEndPos = self.getBlockLocations(addressInInt, blockSize)
@@ -192,6 +196,7 @@ class Cache(AbstractMemory):
         """
         busSize = self.busSizeToPrevLevel
         blockToBusSizeFactor = int(math.ceil(1.0*BlockSize/busSize))
+        print "{name} blockToBusSizeFactor = {b}".format(name=self.name, b=blockToBusSizeFactor)
         singleAccessTime = self.accessTime * blockToBusSizeFactor
         totalAccessTime = (self.readHits + self.writeHits
                            + self.readMisses + self.writeMisses) * singleAccessTime

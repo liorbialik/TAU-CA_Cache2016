@@ -1,4 +1,4 @@
-
+import config
 class Utils(object):
 
     @staticmethod
@@ -40,18 +40,19 @@ class Utils(object):
         if l2Cache is None:
             mainMemoryAccessTime = mainMemory.getTotalActualAccessTime(l1Cache.blockSize)
             l2CacheAccessTime = 0
-            l1CacheAccessTime = l1Cache.getTotalActualAccessTime(4)
+            l1CacheAccessTime = l1Cache.getTotalActualAccessTime(config.getWordSize())
             l2Misses = 0
             l2Hits = 0
             l2Stats = [0, 0, 0, 0]
         else:
             mainMemoryAccessTime = mainMemory.getTotalActualAccessTime(l2Cache.blockSize)
             l2CacheAccessTime = l2Cache.getTotalActualAccessTime(l1Cache.blockSize)
-            l1CacheAccessTime = l1Cache.getTotalActualAccessTime(4)
+            l1CacheAccessTime = l1Cache.getTotalActualAccessTime(config.getWordSize())
             l2Misses = (l2Cache.readMisses + l2Cache.writeMisses)
             l2Hits = (l2Cache.readHits + l2Cache.writeHits)
             l2Stats = [l2Cache.readHits, l2Cache.writeHits, l2Cache.readMisses, l2Cache.writeMisses]
-
+            
+        print "mainMemoryAccessTime",mainMemoryAccessTime,"l2CacheAccessTime",l2CacheAccessTime,"l1CacheAccessTime",l1CacheAccessTime
         totalAccessTime = mainMemoryAccessTime + l2CacheAccessTime + l1CacheAccessTime
         programRunningTimeInCycles = totalNumberOfCycles + totalAccessTime
         l1Misses = (l1Cache.readMisses + l1Cache.writeMisses)

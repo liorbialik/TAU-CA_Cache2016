@@ -20,7 +20,6 @@ addressSize = 24/8  # Bytes
 CPUL1BusSize = 32/8  # Bytes
 L1L2BusSize = 256/8  # Bytes
 cache2MemBusSize = 64/8  # Bytes - for both L1 and L2
-wordSize = 32/8  # Bytes
 
 # File names magics
 mainMemoryStatusFileName = "memout.txt"
@@ -31,8 +30,10 @@ statsFileName = "stats.txt"
 
 options = None
 
+
 def assertOptionsInit():
     assert options is not None, "options not initialized yet"
+
 
 def getCmdLineOptions():
     parser = argparse.ArgumentParser(description='Cache Simulation')
@@ -64,60 +65,76 @@ def assertValidLevels(level):
     assert int(level) in [1, 2], "Wrong number of levels received"
     return int(level)
 
+
 def assertFileExists(filePath):
     assert os.path.isfile(filePath), "Trace file %s does not exist!" % filePath
     return filePath
+
 
 def assertValidL1BlockSize(blockSize):
     assert blockSize.isdigit(), "Block size has to be an integer!"
     assert int(blockSize) in validL1BlockSizes, "L1 Block size is not in allowed scope!"
     return int(blockSize)
 
+
 def assertValidL2BlockSize(blockSize):
     assert blockSize.isdigit(), "Block size has to be an integer!"
     assert int(blockSize) in validL2BlockSizes, "L2 Block size is not in allowed scope!"
     return int(blockSize)
 
+
 def getLevelsOfCache():
     assertOptionsInit()
     return int(options.levels)
+
 
 def getBlockSizeForL1Cache():
     assertOptionsInit()
     return options.b1
 
+
 def getBlockSizeForL2Cache():
     assertOptionsInit()
     return options.b2
+
 
 def getTraceFilePath():
     assertOptionsInit()
     return options.traceFilePath
 
+
 def getMemoryStatusInputFilePath():
     assertOptionsInit()
     return options.meminFilePath
 
+
 def getMainMemoryStatusOutputFilePath():
     return mainMemoryStatusFileName
+
 
 def getL1CacheStatusOutputFilePath():
     return l1CacheStatusOutputFileName
 
+
 def getL2Way0CacheStatusOutputFilePath():
     return l2Way0CacheStatusOutputFileName
+
 
 def getL2Way1CacheStatusOutputFilePath():
     return l2Way1CacheStatusOutputFileName
 
+
 def getStatsFileName():
     return statsFileName
+
 
 def getMainMemorySize():
     return mainMemorySize
 
+
 def getL1MemorySize():
     return L1MemorySize
+
 
 def getL2MemorySize():
     return L2MemorySize
@@ -137,6 +154,7 @@ def getL1L2BusSize():
 def getCPUL1BusSize():
     return CPUL1BusSize
 
+
 def getMainMemoryAccessTime():
     return mainMemoryAccessTime
 
@@ -148,6 +166,3 @@ def getL1AccessTime():
 
 def getL2AccessTime():
     return l2AccessTime
-
-def getWordSize():
-    return wordSize
